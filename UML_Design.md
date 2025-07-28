@@ -229,22 +229,22 @@ classDiagram
     User <|-- Broker
     
     %% Composition and Association relationships
-    Carrier ||--o{ Equipment : owns
-    Carrier ||--o{ Driver : employs
+    Carrier ||--o{ Equipment : "owns"
+    Carrier ||--o{ Driver : "employs"
     Carrier ||--o{ Shipment : "assigned to"
     
-    Shipper ||--o{ Load : posts
-    Shipper ||--o{ Payment : makes
+    Shipper ||--o{ Load : "posts"
+    Shipper ||--o{ Payment : "makes"
     
     Load ||--|| Location : "pickup location"
     Load ||--|| Location : "delivery location"
-    Load ||--o| Route : has
-    Load ||--o| Shipment : becomes
+    Load ||--o| Route : "has"
+    Load ||--o| Shipment : "becomes"
     
     Shipment ||--|| Driver : "driven by"
-    Shipment ||--o| Payment : generates
+    Shipment ||--o| Payment : "generates"
     
-    User ||--o{ Notification : receives
+    User ||--o{ Notification : "receives"
     User ||--o{ Rating : "gives/receives"
     
     %% Dependencies
