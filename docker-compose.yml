@@ -1,6 +1,85 @@
 version: '3.8'
 
 services:
+  # Ruby Application Services
+  freight_api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_rails_api
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      MONGODB_URL: mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      KAFKA_URL: kafka:9092
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - mongodb
+      - elasticsearch
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec rails server -b 0.0.0.0
+
+  # Sidekiq Background Jobs
+  freight_sidekiq:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_sidekiq
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      MONGODB_URL: mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      KAFKA_URL: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+  # Karafka Kafka Consumer
+  freight_karafka:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_karafka
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      KAFKA_URL: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec karafka server
   # Database Services
   postgres:
     image: postgres:14-alpine

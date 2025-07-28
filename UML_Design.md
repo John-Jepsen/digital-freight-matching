@@ -1,317 +1,305 @@
-# Digital Freight Matching System - UML Design
+# Digital Freight Matching System - Ruby Architecture Design
 
 ## Class Diagram
 
 ```mermaid
 classDiagram
     class User {
-        +Long id
+        +Integer id
         +String email
-        +String password
-        +String firstName
-        +String lastName
-        +String phoneNumber
-        +UserType userType
-        +Date createdAt
-        +Date updatedAt
-        +Boolean isActive
-        +login()
-        +logout()
-        +updateProfile()
-        +resetPassword()
+        +String encrypted_password
+        +String first_name
+        +String last_name
+        +String phone_number
+        +String user_type
+        +DateTime created_at
+        +DateTime updated_at
+        +Boolean active
+        +authenticate(password)
+        +generate_jwt_token()
+        +update_profile(params)
+        +reset_password!()
+        +send_confirmation_email()
     }
 
-    class Carrier {
-        +Long id
-        +Long userId
-        +String companyName
-        +String dotNumber
-        +String mcNumber
-        +String insuranceInfo
-        +CarrierStatus status
-        +Double rating
-        +Integer totalDeliveries
-        +List~Equipment~ equipment
-        +List~Driver~ drivers
-        +registerEquipment()
-        +updateStatus()
-        +viewPerformanceMetrics()
-        +manageDrivers()
+    class CarrierProfile {
+        +Integer id
+        +Integer user_id
+        +String company_name
+        +String dot_number
+        +String mc_number
+        +Text insurance_info
+        +String status
+        +Decimal rating
+        +Integer total_deliveries
+        +register_equipment(equipment_params)
+        +update_status!(new_status)
+        +performance_metrics()
+        +manage_drivers()
+        +calculate_average_rating()
     }
 
-    class Shipper {
-        +Long id
-        +Long userId
-        +String companyName
-        +String businessType
-        +String paymentTerms
-        +Double creditRating
-        +List~Load~ loads
-        +postLoad()
-        +selectCarrier()
-        +trackShipment()
-        +makePayment()
-        +viewAnalytics()
+    class ShipperProfile {
+        +Integer id
+        +Integer user_id
+        +String company_name
+        +String business_type
+        +String payment_terms
+        +Decimal credit_rating
+        +post_load(load_params)
+        +select_carrier(carrier_id)
+        +track_shipment(shipment_id)
+        +process_payment(payment_params)
+        +analytics_dashboard()
     }
 
-    class Broker {
-        +Long id
-        +Long userId
-        +String companyName
-        +String licenseNumber
-        +Double commissionRate
-        +List~Customer~ customers
-        +List~Transaction~ transactions
-        +manageCapacity()
-        +negotiateRates()
-        +trackCommissions()
-        +generateReports()
+    class BrokerProfile {
+        +Integer id
+        +Integer user_id
+        +String company_name
+        +String license_number
+        +Decimal commission_rate
+        +manage_capacity()
+        +negotiate_rates(load_id, rate)
+        +track_commissions()
+        +generate_reports(date_range)
     }
 
     class Load {
-        +Long id
-        +Long shipperId
-        +String loadType
-        +Double weight
-        +Integer palletCount
-        +Location pickupLocation
-        +Location deliveryLocation
-        +DateTime pickupTime
-        +DateTime deliveryTime
-        +Double offeredRate
-        +LoadStatus status
-        +String specialRequirements
-        +calculateDistance()
-        +updateStatus()
-        +assignCarrier()
-        +generateBOL()
+        +Integer id
+        +Integer shipper_profile_id
+        +String load_type
+        +Decimal weight
+        +Integer pallet_count
+        +Integer pickup_location_id
+        +Integer delivery_location_id
+        +DateTime pickup_time
+        +DateTime delivery_time
+        +Decimal offered_rate
+        +String status
+        +Text special_requirements
+        +calculate_distance()
+        +update_status!(new_status)
+        +assign_carrier!(carrier_id)
+        +generate_bol()
+        +post_to_marketplace()
     }
 
     class Equipment {
-        +Long id
-        +Long carrierId
-        +EquipmentType type
+        +Integer id
+        +Integer carrier_profile_id
+        +String equipment_type
         +String make
         +String model
         +Integer year
-        +String plateNumber
-        +Double capacity
+        +String plate_number
+        +Decimal capacity
         +String dimensions
-        +EquipmentStatus status
-        +updateStatus()
-        +scheduleMaintenance()
-        +validateCompliance()
+        +String status
+        +update_status!(new_status)
+        +schedule_maintenance(date)
+        +validate_compliance()
+        +available_for_load?(load)
     }
 
     class Driver {
-        +Long id
-        +Long carrierId
-        +String licenseNumber
-        +Date licenseExpiry
-        +String certifications
-        +DriverStatus status
-        +Double rating
-        +Integer totalMiles
-        +updateStatus()
-        +recordDrivingHours()
-        +submitPOD()
+        +Integer id
+        +Integer carrier_profile_id
+        +String license_number
+        +Date license_expiry
+        +Text certifications
+        +String status
+        +Decimal rating
+        +Integer total_miles
+        +update_status!(new_status)
+        +record_driving_hours(hours)
+        +submit_pod(proof_params)
+        +available_for_load?(load)
     }
 
     class Route {
-        +Long id
-        +Long loadId
-        +Location startPoint
-        +Location endPoint
-        +List~Waypoint~ waypoints
-        +Double totalDistance
-        +Double estimatedTime
-        +Double fuelCost
-        +Boolean hasBackhaul
-        +calculateOptimalPath()
-        +estimateFuelConsumption()
-        +identifyRestStops()
-        +checkRestrictions()
+        +Integer id
+        +Integer load_id
+        +Integer start_location_id
+        +Integer end_location_id
+        +Json waypoints
+        +Decimal total_distance
+        +Decimal estimated_time
+        +Decimal fuel_cost
+        +Boolean has_backhaul
+        +calculate_optimal_path()
+        +estimate_fuel_consumption()
+        +identify_rest_stops()
+        +check_restrictions()
     }
 
     class Shipment {
-        +Long id
-        +Long loadId
-        +Long carrierId
-        +Long driverId
-        +ShipmentStatus status
-        +DateTime dispatchTime
-        +DateTime deliveryTime
-        +Location currentLocation
-        +Double completionPercentage
-        +updateLocation()
-        +updateStatus()
-        +notifyStakeholders()
-        +generatePOD()
+        +Integer id
+        +Integer load_id
+        +Integer carrier_profile_id
+        +Integer driver_id
+        +String status
+        +DateTime dispatch_time
+        +DateTime delivery_time
+        +Json current_location
+        +Decimal completion_percentage
+        +update_location!(location_data)
+        +update_status!(new_status)
+        +notify_stakeholders()
+        +generate_pod()
+        +broadcast_location_update()
     }
 
     class Payment {
-        +Long id
-        +Long shipmentId
-        +Long payerId
-        +Long payeeId
-        +Double amount
-        +PaymentStatus status
-        +PaymentMethod method
-        +DateTime processedAt
-        +String transactionId
-        +processPayment()
-        +generateInvoice()
-        +handleDispute()
-        +recordTransaction()
+        +Integer id
+        +Integer shipment_id
+        +Integer payer_id
+        +Integer payee_id
+        +Decimal amount
+        +String status
+        +String payment_method
+        +DateTime processed_at
+        +String stripe_transaction_id
+        +process_payment!()
+        +generate_invoice()
+        +handle_dispute(reason)
+        +record_transaction()
     }
 
     class Location {
+        +Integer id
         +String address
-        +Double latitude
-        +Double longitude
+        +Decimal latitude
+        +Decimal longitude
         +String city
         +String state
-        +String zipCode
-        +String facilityType
-        +getCoordinates()
-        +calculateDistance(Location other)
-        +validateAddress()
-    }
-
-    class MatchingAlgorithm {
-        +generateMatches(Load load)
-        +calculateScore(Load load, Carrier carrier)
-        +optimizeRoute(List~Load~ loads)
-        +findBackhaulOpportunities()
-        +minimizeDeadheadMiles()
-        +considerDriverPreferences()
-        +evaluateCarrierReliability()
+        +String zip_code
+        +String facility_type
+        +geocode_address()
+        +calculate_distance_to(other_location)
+        +validate_address()
+        +within_radius?(center, radius)
     }
 
     class Notification {
-        +Long id
-        +Long userId
-        +NotificationType type
-        +String message
-        +DateTime sentAt
-        +Boolean isRead
-        +NotificationChannel channel
-        +send()
-        +markAsRead()
-        +scheduleReminder()
-    }
-
-    class Analytics {
-        +generateCarrierReport(Long carrierId)
-        +generateShipperReport(Long shipperId)
-        +calculateDeadheadReduction()
-        +analyzeRouteEfficiency()
-        +trackKPIs()
-        +generateMarketInsights()
-        +predictDemand()
+        +Integer id
+        +Integer user_id
+        +String notification_type
+        +Text message
+        +DateTime sent_at
+        +Boolean read
+        +String channel
+        +Json metadata
+        +send_via_email()
+        +send_via_sms()
+        +send_push_notification()
+        +mark_as_read!()
+        +schedule_reminder(delay)
     }
 
     class Rating {
-        +Long id
-        +Long raterId
-        +Long ratedUserId
+        +Integer id
+        +Integer rater_id
+        +Integer rated_user_id
         +Integer score
-        +String comments
-        +DateTime createdAt
-        +RatingType type
-        +calculateAverageRating()
-        +flagInappropriate()
+        +Text comments
+        +DateTime created_at
+        +String rating_type
+        +calculate_average_for_user(user_id)
+        +flag_inappropriate!()
+        +moderate_content()
     }
 
-    %% Inheritance relationships
-    User <|-- Carrier
-    User <|-- Shipper
-    User <|-- Broker
+    %% Associations - Rails STI pattern
+    User ||--o| CarrierProfile : "has_one"
+    User ||--o| ShipperProfile : "has_one" 
+    User ||--o| BrokerProfile : "has_one"
     
-    %% Composition and Association relationships
-    Carrier ||--o{ Equipment : "owns"
-    Carrier ||--o{ Driver : "employs"
-    Carrier ||--o{ Shipment : "assigned to"
+    %% Core business relationships
+    CarrierProfile ||--o{ Equipment : "has_many"
+    CarrierProfile ||--o{ Driver : "has_many"
+    CarrierProfile ||--o{ Shipment : "has_many"
     
-    Shipper ||--o{ Load : "posts"
-    Shipper ||--o{ Payment : "makes"
+    ShipperProfile ||--o{ Load : "has_many"
+    ShipperProfile ||--o{ Payment : "has_many (as payer)"
     
-    Load ||--|| Location : "pickup location"
-    Load ||--|| Location : "delivery location"
-    Load ||--o| Route : "has"
-    Load ||--o| Shipment : "becomes"
+    Load ||--|| Location : "belongs_to :pickup_location"
+    Load ||--|| Location : "belongs_to :delivery_location"
+    Load ||--o| Route : "has_one"
+    Load ||--o| Shipment : "has_one"
     
-    Shipment ||--|| Driver : "driven by"
-    Shipment ||--o| Payment : "generates"
+    Shipment ||--|| Driver : "belongs_to"
+    Shipment ||--o| Payment : "has_one"
     
-    User ||--o{ Notification : "receives"
-    User ||--o{ Rating : "gives/receives"
-    
-    %% Dependencies
-    MatchingAlgorithm ..> Load : processes
-    MatchingAlgorithm ..> Carrier : matches
-    Analytics ..> Shipment : analyzes
-    Analytics ..> Route : optimizes
+    User ||--o{ Notification : "has_many"
+    User ||--o{ Rating : "has_many (as rater/rated)"
 ```
 
-## Sequence Diagram - Load Matching Process
+## Sequence Diagram - Ruby Load Matching Process
 
 ```mermaid
 sequenceDiagram
     participant S as Shipper
-    participant API as API Gateway
-    participant MS as Matching Service
-    participant DB as Database
-    participant NS as Notification Service
+    participant API as Rails API Gateway
+    participant LJ as LoadMatchingJob
+    participant MS as MatchingService
+    participant DB as PostgreSQL
+    participant RQ as Sidekiq/Redis
+    participant AC as ActionCable
     participant C as Carrier
-    participant PS as Payment Service
+    participant PS as StripeService
 
-    S->>+API: POST /loads (new load)
-    API->>+DB: Save load details
-    DB-->>-API: Load saved
-    API->>+MS: Trigger matching algorithm
-    API-->>-S: Load posted confirmation
+    S->>+API: POST /api/v1/loads (JSON payload)
+    API->>+DB: Load.create!(load_params)
+    DB-->>-API: Load record saved
+    API->>+RQ: LoadMatchingJob.perform_async(load.id)
+    API-->>-S: 201 Created {load_id, status: 'posted'}
 
-    MS->>+DB: Query available carriers
-    DB-->>-MS: Carrier list
-    MS->>MS: Calculate match scores
-    MS->>MS: Optimize routes
-    MS->>+DB: Save match results
-    DB-->>-MS: Results saved
+    RQ->>+LJ: Execute background job
+    LJ->>+MS: MatchingService.new(load).find_carriers
+    MS->>+DB: CarrierProfile.available_for(load)
+    DB-->>-MS: Active carriers with equipment
+    MS->>MS: Calculate match scores (Ruby algorithm)
+    MS->>MS: Optimize routes with geocoder gem
+    MS->>+DB: LoadMatch.create_batch(matches)
+    DB-->>-MS: Match results persisted
+    LJ->>+RQ: CarrierNotificationJob.perform_async(matches)
+    LJ-->>-RQ: Job completed
 
-    MS->>+NS: Send notifications to matched carriers
-    NS->>+C: Push notification with load details
-    Note over C: Carrier reviews load details
+    RQ->>+AC: ActionCable.server.broadcast
+    AC->>+C: WebSocket notification + load details
+    Note over C: Carrier reviews load in mobile app
 
-    C->>+API: POST /loads/{id}/accept
-    API->>+DB: Update load status = BOOKED
+    C->>+API: POST /api/v1/loads/{id}/accept
+    API->>+DB: load.update!(status: 'booked', carrier: carrier)
     DB-->>-API: Status updated
-    API->>+NS: Notify shipper of acceptance
-    NS->>-S: Send acceptance notification
-    API-->>-C: Acceptance confirmed
+    API->>+AC: Broadcast acceptance to shipper
+    AC->>-S: Real-time acceptance notification
+    API-->>-C: 200 OK {booking_confirmation}
 
-    Note over C: Driver proceeds to pickup
-    C->>+API: PUT /shipments/{id}/status (IN_TRANSIT)
-    API->>+DB: Update tracking info
-    DB-->>-API: Tracking updated
-    API->>+NS: Send tracking updates
-    NS->>-S: Real-time location updates
-    API-->>-C: Status update confirmed
+    Note over C: Driver starts journey
+    C->>+API: PATCH /api/v1/shipments/{id} {status: 'in_transit'}
+    API->>+DB: shipment.update_with_location!(gps_data)
+    DB-->>-API: Tracking data saved
+    API->>+AC: ActionCable.server.broadcast
+    AC->>-S: Live GPS tracking updates
+    API-->>-C: 200 OK
 
     Note over C: Delivery completed
-    C->>+API: POST /shipments/{id}/pod (proof of delivery)
-    API->>+DB: Complete shipment
-    DB-->>-API: Shipment completed
-    API->>+PS: Trigger payment process
-    PS->>+S: Process payment
-    S-->>-PS: Payment processed
-    PS->>+C: Release payment
+    C->>+API: POST /api/v1/shipments/{id}/proof_of_delivery
+    API->>+DB: shipment.complete_delivery!(pod_data)
+    DB-->>-API: Shipment marked delivered
+    API->>+RQ: PaymentProcessingJob.perform_async(shipment.id)
+    RQ->>+PS: StripeService.process_payment(payment_intent)
+    PS->>+S: Charge shipper via Stripe API
+    S-->>-PS: Payment successful
+    PS->>+C: Transfer to carrier (Stripe Connect)
     C-->>-PS: Payment received
-    PS-->>-API: Payment completed
+    PS-->>-RQ: Payment flow completed
 
-    API->>+NS: Request rating/feedback
-    NS->>S: Rating request
-    NS->>-C: Rating request
+    RQ->>+AC: Broadcast payment completion
+    AC->>S: Payment notification
+    AC->>-C: Payment received notification
 ```
 
 ## Use Case Diagram
@@ -389,40 +377,40 @@ graph TB
 - Optimize Routes
 - Process Payments (automated)
 
-## Activity Diagram - Carrier Load Booking Process
+## Activity Diagram - Ruby Carrier Load Booking Process
 
 ```mermaid
 flowchart TD
-    A[START] --> B[Carrier Opens Mobile App]
-    B --> C[View Available Loads]
-    C --> D{Filter Preferences Match?}
-    D -->|No| O[Adjust Filters]
+    A[START] --> B[Carrier opens React Native app]
+    B --> C[Rails API: GET /api/v1/loads/available]
+    C --> D{Filters match preferences?}
+    D -->|No| O[Update search filters]
     O --> C
-    D -->|Yes| E[View Load Details]
-    E --> F[Check Route Optimization]
-    F --> G[Calculate Potential Revenue]
-    G --> H{Profitable?}
-    H -->|No| P[Look for Backhaul Options]
-    P --> Q{Backhaul Available?}
-    Q -->|Yes| R[Book Combined Load]
+    D -->|Yes| E[Load detailed view with Ruby calculations]
+    E --> F[RouteService.calculate_optimal_path]
+    F --> G[RevenueCalculator.estimate_profit]
+    G --> H{Profitable after fuel/time costs?}
+    H -->|No| P[BackhaulService.find_opportunities]
+    P --> Q{Backhaul loads available?}
+    Q -->|Yes| R[Book combined loads via API]
     Q -->|No| O
-    H -->|Yes| I[Submit Load Request]
-    I --> J{Request Approved?}
+    H -->|Yes| I[POST /api/v1/loads/{id}/booking_request]
+    I --> J{Rails validations pass?}
     J -->|No| P
-    J -->|Yes| K[Receive Load Assignment]
-    K --> L[Navigate to Pickup]
-    L --> M[Confirm Pickup]
-    M --> N[Start Transit]
-    N --> S[Update Location]
-    S --> T{Delivered?}
+    J -->|Yes| K[LoadBookingJob.perform_async]
+    K --> L[GPS navigation with ActionCable tracking]
+    L --> M[POST /api/v1/pickups/{id}/confirm]
+    M --> N[Shipment.update!(status: 'in_transit')]
+    N --> S[ActionCable.broadcast_location_update]
+    S --> T{POD submitted via mobile?}
     T -->|No| S
-    T -->|Yes| U[Submit POD]
-    U --> V[Complete Delivery]
-    V --> W[Receive Payment]
-    W --> X[Rate Shipper]
+    T -->|Yes| U[POST /api/v1/deliveries/{id}/proof]
+    U --> V[PaymentProcessingJob.perform_async]
+    V --> W[StripeService.transfer_payment]
+    W --> X[RatingService.request_feedback]
     X --> Y[END]
     R --> L
-    P --> Z[Back to Load Search]
+    P --> Z[Return to load search]
     Z --> C
 ```
 
@@ -437,18 +425,18 @@ graph TB
     end
 
     subgraph "API Gateway Layer"
-        GATEWAY[Spring Cloud Gateway<br/>Authentication<br/>Rate Limiting<br/>Load Balancing]
+        GATEWAY[Rails API Gateway<br/>JWT Authentication<br/>Rate Limiting<br/>Load Balancing]
     end
 
-    subgraph "Microservices Layer"
-        USER[User Service<br/>:8081]
-        LOAD[Load Service<br/>:8082]
-        MATCH[Matching Service<br/>:8083]
-        ROUTE[Route Service<br/>:8084]
-        TRACK[Tracking Service<br/>:8085]
-        PAY[Payment Service<br/>:8086]
-        NOTIF[Notification Service<br/>:8087]
-        ANALYTICS[Analytics Service<br/>:8088]
+    subgraph "Ruby Microservices Layer"
+        USER[User Service<br/>Rails API :3001]
+        LOAD[Load Service<br/>Rails API :3002]
+        MATCH[Matching Service<br/>Hanami/Rails :3003]
+        ROUTE[Route Service<br/>Rails API :3004]
+        TRACK[Tracking Service<br/>Rails + ActionCable :3005]
+        PAY[Payment Service<br/>Rails API :3006]
+        NOTIF[Notification Service<br/>Sidekiq + Rails :3007]
+        ANALYTICS[Analytics Service<br/>Rails API :3008]
     end
 
     subgraph "Data Layer"
@@ -497,55 +485,105 @@ graph TB
     ANALYTICS --> ELASTIC
 ```
 
-### Service Dependencies
+### Ruby Service Dependencies & Architecture
 
+**Rails Modular Monolith Structure:**
 ```
-User Service
-├── PostgreSQL (User data)
-├── Redis (Session cache)
-└── Kafka (User events)
-
-Load Service  
-├── PostgreSQL (Load data)
-├── Elasticsearch (Load search)
-└── Kafka (Load events)
-
-Matching Service
-├── PostgreSQL (Match results)
-├── Redis (Carrier cache)
-├── Kafka (Match events)
-└── AI/ML Engine (Algorithms)
-
-Route Service
-├── PostgreSQL (Route data)
-├── Google Maps API (Routing)
-└── Kafka (Route events)
-
-Tracking Service
-├── PostgreSQL (Tracking data)
-├── MongoDB (Location history)
-├── Kafka (Location events)
-└── WebSocket (Real-time updates)
-
-Payment Service
-├── PostgreSQL (Transaction data)
-├── Stripe API (Payment processing)
-└── Kafka (Payment events)
-
-Notification Service
-├── Redis (Message queue)
-├── Kafka (Event consumption)
-├── SendGrid (Email)
-└── Twilio (SMS)
-
-Analytics Service
-├── MongoDB (Analytics data)
-├── Elasticsearch (Data indexing)
-├── Kafka (Event processing)
-└── Apache Spark (Data processing)
+freight_matching_platform/
+├── app/
+│   ├── models/
+│   │   ├── user.rb (with STI for roles)
+│   │   ├── carrier_profile.rb
+│   │   ├── shipper_profile.rb
+│   │   ├── load.rb (with AASM state machine)
+│   │   └── shipment.rb
+│   ├── controllers/api/v1/
+│   │   ├── loads_controller.rb
+│   │   ├── shipments_controller.rb
+│   │   └── payments_controller.rb
+│   ├── jobs/
+│   │   ├── load_matching_job.rb
+│   │   ├── payment_processing_job.rb
+│   │   └── notification_job.rb
+│   ├── services/
+│   │   ├── matching_service.rb
+│   │   ├── route_optimization_service.rb
+│   │   ├── stripe_service.rb
+│   │   └── geocoding_service.rb
+│   ├── channels/
+│   │   ├── tracking_channel.rb
+│   │   └── notifications_channel.rb
+│   └── serializers/
+│       ├── load_serializer.rb
+│       └── shipment_serializer.rb
+└── engines/
+    ├── user_management/
+    ├── load_matching/
+    ├── payment_processing/
+    └── real_time_tracking/
 ```
 
-## Deployment Diagram
+**User Service (Rails Engine)**
+├── PostgreSQL (User authentication & profiles)
+├── Redis (Session storage & caching)
+├── Devise (Authentication)
+├── JWT tokens (API authentication)
+└── Karafka (User events to message bus)
+
+**Load Service (Rails API)**
+├── PostgreSQL (Load data & relationships)
+├── Elasticsearch (Load search with Searchkick)
+├── Geocoder gem (Address validation)
+├── AASM (State machine management)
+└── Karafka (Load lifecycle events)
+
+**Matching Service (Ruby with AI)**
+├── PostgreSQL (Match results & carrier data)
+├── Redis (Carrier availability cache)
+├── Sidekiq (Background matching jobs)
+├── Ruby ML libraries (scoring algorithms)
+├── Dry-rb gems (functional programming patterns)
+└── Karafka (Match events publishing)
+
+**Route Service (Rails API)**
+├── PostgreSQL (Route data & optimization results)
+├── Google Maps API (via HTTParty)
+├── Geocoder gem (Distance calculations)
+├── Redis (Route caching)
+└── Karafka (Route optimization events)
+
+**Tracking Service (Rails + ActionCable)**
+├── PostgreSQL (Shipment data)
+├── MongoDB (GPS location history)
+├── ActionCable (WebSocket real-time updates)
+├── Redis (ActionCable adapter)
+├── Karafka (Location events)
+└── Sidekiq (Location processing jobs)
+
+**Payment Service (Rails API)**
+├── PostgreSQL (Transaction records)
+├── Stripe API (via stripe-ruby gem)
+├── Sidekiq (Payment processing jobs)
+├── Money-rails (Currency handling)
+└── Karafka (Payment events)
+
+**Notification Service (Sidekiq + Rails)**
+├── Redis (Message queue for Sidekiq)
+├── Karafka (Event consumption from other services)
+├── SendGrid (Email via sendgrid-ruby)
+├── Twilio (SMS via twilio-ruby)
+├── FCM (Push notifications)
+└── ActionCable (Real-time notifications)
+
+**Analytics Service (Rails API)**
+├── MongoDB (Analytics data warehouse)
+├── Elasticsearch (Data indexing with Searchkick)
+├── Karafka (Event stream processing)
+├── Sidekiq-cron (Scheduled report generation)
+└── Ruby data processing libraries
+```
+
+## Ruby Deployment Architecture
 
 ```mermaid
 graph TB
@@ -558,26 +596,26 @@ graph TB
     end
 
     subgraph "Web Servers"
-        WEB1[Web Server 1<br/>Nginx]
-        WEB2[Web Server 2<br/>Nginx]
-        WEB3[Web Server 3<br/>Nginx]
+        WEB1[Nginx + Puma<br/>Rails Server 1]
+        WEB2[Nginx + Puma<br/>Rails Server 2]
+        WEB3[Nginx + Puma<br/>Rails Server 3]
     end
 
-    subgraph "Application Servers"
-        APP1[App Server 1<br/>API Gateway]
-        APP2[App Server 2<br/>Microservices]
-        APP3[App Server 3<br/>Microservices]
+    subgraph "Ruby Application Servers"
+        APP1[Rails API Gateway<br/>Puma :3000]
+        APP2[Rails Microservices<br/>Puma :3001-3008]
+        APP3[Sidekiq Workers<br/>Background Jobs]
     end
 
     subgraph "Database Cluster"
-        MASTER[Master DB<br/>PostgreSQL]
-        SLAVE1[Slave DB 1]
-        SLAVE2[Slave DB 2]
+        MASTER[Master PostgreSQL<br/>Primary DB]
+        SLAVE1[Read Replica 1]
+        SLAVE2[Read Replica 2]
     end
 
-    subgraph "Cache & Analytics"
-        REDIS_CLUSTER[Redis Cluster]
-        MONGO_CLUSTER[MongoDB Cluster]
+    subgraph "Cache & Message Queue"
+        REDIS_CLUSTER[Redis Cluster<br/>Sessions + Sidekiq + ActionCable]
+        MONGO_CLUSTER[MongoDB Cluster<br/>Analytics + GPS History]
     end
 
     USERS --> ALB
@@ -605,91 +643,185 @@ graph TB
     APP3 --> MONGO_CLUSTER
 ```
 
-### Kubernetes Deployment Structure
+### Rails + Docker Deployment Structure
 
 ```
-digital-freight-matching-k8s/
-├── namespaces/
-│   ├── production.yaml
-│   ├── staging.yaml
-│   └── development.yaml
-├── api-gateway/
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── ingress.yaml
-├── microservices/
-│   ├── user-service/
-│   ├── load-service/
-│   ├── matching-service/
-│   ├── route-service/
-│   ├── tracking-service/
-│   ├── payment-service/
-│   ├── notification-service/
-│   └── analytics-service/
-├── databases/
-│   ├── postgresql/
-│   ├── mongodb/
-│   ├── redis/
-│   └── elasticsearch/
+freight_matching_deployment/
+├── docker-compose.yml (Rails services + dependencies)
+├── Dockerfile.rails (Ruby 3.3 + Rails 8)
+├── kamal/
+│   ├── deploy.yml (Kamal deployment config)
+│   └── secrets (encrypted environment variables)
+├── kubernetes/
+│   ├── rails-api-deployment.yaml
+│   ├── sidekiq-deployment.yaml
+│   ├── postgres-statefulset.yaml
+│   ├── redis-deployment.yaml
+│   └── nginx-configmap.yaml
+├── rails_apps/
+│   ├── freight_matching_api/ (Main Rails API)
+│   ├── user_service/ (Rails Engine)
+│   ├── matching_service/ (Rails + ML)
+│   ├── payment_service/ (Rails + Stripe)
+│   └── analytics_service/ (Rails + MongoDB)
 └── monitoring/
-    ├── prometheus/
-    └── grafana/
+    ├── prometheus/ (Ruby metrics collection)
+    ├── grafana/ (Rails performance dashboards)
+    └── elasticsearch/ (Centralized logging)
 ```
 
-## State Diagram - Load Status
+## State Diagram - Ruby Load State Machine
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Posted : Shipper creates load
+    [*] --> posted : Shipper creates load
     
-    Posted --> Matched : Algorithm finds carriers
-    Posted --> Expired : No matches found (72h timeout)
-    Posted --> Cancelled : Shipper cancels
+    posted --> matching : LoadMatchingJob triggered
+    posted --> expired : No matches (72h timeout via sidekiq-cron)
+    posted --> cancelled : Shipper cancels via API
     
-    Matched --> Booked : Carrier accepts
-    Matched --> Posted : All carriers decline
+    matching --> matched : MatchingService finds carriers
+    matching --> posted : No suitable carriers found
     
-    Booked --> InTransit : Pickup confirmed
-    Booked --> Cancelled : Cancellation before pickup
+    matched --> booked : Carrier accepts via API
+    matched --> matching : All carriers decline (retry)
     
-    InTransit --> Delivered : POD submitted
-    InTransit --> Delayed : Schedule issues
-    InTransit --> Cancelled : Critical failure
+    booked --> in_transit : GPS pickup confirmation
+    booked --> cancelled : Cancellation before pickup
     
-    Delayed --> InTransit : Issue resolved
-    Delayed --> Cancelled : Cannot complete
+    in_transit --> delivered : POD submitted via mobile app
+    in_transit --> delayed : Schedule issues detected
+    in_transit --> cancelled : Critical failure
     
-    Delivered --> PaymentPending : Invoice generated
+    delayed --> in_transit : Issue resolved
+    delayed --> cancelled : Cannot complete delivery
     
-    PaymentPending --> Completed : Payment processed
-    PaymentPending --> Disputed : Payment issue
+    delivered --> payment_pending : PaymentProcessingJob triggered
     
-    Disputed --> Completed : Dispute resolved
-    Disputed --> Cancelled : Dispute unresolved
+    payment_pending --> completed : Stripe payment successful
+    payment_pending --> disputed : Payment issue flagged
     
-    Expired --> [*]
-    Cancelled --> [*]
-    Completed --> [*]
+    disputed --> completed : Dispute resolved via admin
+    disputed --> cancelled : Dispute unresolved (refund)
     
-    note right of Posted
-        Initial state when
-        shipper creates load
+    expired --> [*]
+    cancelled --> [*]
+    completed --> [*]
+    
+    note right of posted
+        Initial state when Load.create!
+        triggers background matching
     end note
     
-    note left of Matched
-        AI algorithm finds
-        suitable carriers
+    note left of matching
+        Ruby MatchingService with
+        geocoder + ML scoring
     end note
     
-    note right of InTransit
-        Real-time GPS
-        tracking active
+    note right of in_transit
+        ActionCable broadcasts
+        real-time GPS updates
     end note
     
-    note left of PaymentPending
-        Automated billing
-        process triggered
+    note left of payment_pending
+        Sidekiq job processes
+        Stripe payment flow
     end note
+```
+
+### Ruby State Machine Implementation
+
+**Using AASM gem in Load model:**
+```ruby
+# app/models/load.rb
+class Load < ApplicationRecord
+  include AASM
+  
+  aasm column: :status do
+    state :posted, initial: true
+    state :matching, :matched, :booked
+    state :in_transit, :delayed, :delivered
+    state :payment_pending, :completed
+    state :cancelled, :expired
+
+    event :start_matching do
+      transitions from: :posted, to: :matching
+      after do
+        LoadMatchingJob.perform_async(id)
+      end
+    end
+
+    event :carriers_found do
+      transitions from: :matching, to: :matched
+      after do
+        broadcast_to_carriers
+      end
+    end
+
+    event :accept_booking do
+      transitions from: :matched, to: :booked
+      after do
+        create_shipment!
+        notify_shipper_of_booking
+      end
+    end
+
+    event :start_transit do
+      transitions from: :booked, to: :in_transit, 
+                 guard: :pickup_location_confirmed?
+      after do
+        start_real_time_tracking
+      end
+    end
+
+    event :complete_delivery do
+      transitions from: [:in_transit, :delayed], to: :delivered
+      after do
+        PaymentProcessingJob.perform_async(shipment.id)
+      end
+    end
+
+    event :process_payment do
+      transitions from: :delivered, to: :payment_pending
+      after do
+        StripeService.new.process_payment(self)
+      end
+    end
+
+    event :complete_payment do
+      transitions from: :payment_pending, to: :completed
+      after do
+        RatingService.request_feedback(self)
+        update_carrier_metrics
+      end
+    end
+
+    # Error handling transitions
+    event :mark_expired do
+      transitions from: [:posted, :matching], to: :expired
+    end
+
+    event :cancel_load do
+      transitions from: [:posted, :matching, :matched, :booked], to: :cancelled
+      after do
+        handle_cancellation_refund if booked?
+      end
+    end
+  end
+
+  private
+
+  def pickup_location_confirmed?
+    shipment&.pickup_confirmed_at.present?
+  end
+
+  def broadcast_to_carriers
+    ActionCable.server.broadcast("carrier_notifications", {
+      type: 'new_load_match',
+      load: LoadSerializer.new(self).as_json
+    })
+  end
+end
 ```
 
 ### State Transitions Table
@@ -850,68 +982,360 @@ graph TB
 - Data Stores: Transaction Data, Analytics Data
 - Functions: Location tracking, status updates, performance metrics
 
-## Key Design Patterns Used
+## Ruby Design Patterns & Architecture
 
-### 1. **Microservices Architecture**
-- Separate services for user management, load matching, routing, tracking, payments, and notifications
-- Each service can be developed, deployed, and scaled independently
-- API Gateway pattern for unified interface
+### 1. **Rails Modular Monolith with Engines**
+- Rails Engines for domain separation (User Management, Load Matching, Payment Processing)
+- Each engine can be developed independently and extracted as microservices later
+- Shared models and services across engines with clear boundaries
 
-### 2. **Event-Driven Architecture**
+### 2. **Event-Driven Architecture with Karafka**
+- Karafka gem for Kafka integration in Ruby
 - Events triggered for load posting, carrier matching, status updates
-- Asynchronous processing for real-time notifications
-- Event sourcing for audit trails
+- Asynchronous processing with Sidekiq for background jobs
+- Event sourcing for audit trails using Rails Event Store
 
-### 3. **Repository Pattern**
-- Data access abstraction for different data stores
-- Supports multiple database types (SQL, NoSQL)
-- Easier testing and maintenance
+### 3. **Service Object Pattern with Dry-rb**
+- Business logic encapsulated in service objects
+- Dry-rb gems for functional programming patterns:
+  - `dry-validation` for input validation
+  - `dry-monads` for railway-oriented programming
+  - `dry-types` for type safety
+  - `dry-system` for dependency injection
 
-### 4. **Strategy Pattern**
-- Different matching algorithms based on load type
-- Multiple route optimization strategies
-- Various pricing models
+### 4. **Repository Pattern with ActiveRecord**
+- Data access abstraction using Rails models
+- Support for multiple databases (PostgreSQL for transactional data, MongoDB for analytics)
+- Query objects for complex database operations
+- Database-per-service pattern for true microservices
 
-### 5. **Observer Pattern**
+### 5. **Observer Pattern with ActionCable**
 - Real-time notifications for status changes
+- WebSocket connections for live tracking updates
 - Event listeners for analytics and reporting
 - Push notifications for mobile apps
 
-### 6. **Factory Pattern**
-- Creating different types of loads, equipment, users
-- Payment method factories
-- Notification channel factories
+### 6. **Factory Pattern with Rails**
+- FactoryBot for test data generation
+- Service factories for different business contexts:
+  - Payment method factories (Stripe, ACH, etc.)
+  - Notification channel factories (Email, SMS, Push)
+  - Equipment type factories
 
-## Security Considerations
+### 7. **State Machine Pattern with AASM**
+- Load status management with clear state transitions
+- Callbacks for state changes triggering background jobs
+- Guard clauses for business rule validation
+- Event-driven state changes
 
-### Authentication & Authorization
-- JWT-based authentication
-- Role-based access control (RBAC)
+### 8. **Command Pattern with Background Jobs**
+- Sidekiq jobs for asynchronous processing
+- Command objects for complex business operations
+- Job scheduling with sidekiq-cron
+- Error handling and retry mechanisms
+
+## Ruby Technology Stack
+
+### **Core Framework & Language**
+```ruby
+# Ruby 3.3+ with modern features
+# Rails 8.0+ with latest improvements
+# Hotwire for real-time updates (ActionCable + Stimulus)
+
+gem 'rails', '~> 8.0'
+gem 'puma'              # Application server
+gem 'bootsnap'          # Boot time optimization
+gem 'jbuilder'          # JSON API responses
+```
+
+### **Database & Persistence**
+```ruby
+gem 'pg'                # PostgreSQL adapter
+gem 'redis'             # Caching and session store
+gem 'mongoid'           # MongoDB ODM for analytics
+gem 'searchkick'        # Elasticsearch integration
+gem 'paper_trail'       # Audit logging
+```
+
+### **Background Processing & Messaging**
+```ruby
+gem 'sidekiq'           # Background job processing
+gem 'sidekiq-cron'      # Scheduled jobs
+gem 'karafka'           # Kafka integration
+gem 'rails_event_store' # Event sourcing
+```
+
+### **Authentication & Authorization**
+```ruby
+gem 'devise'            # User authentication
+gem 'jwt'               # API token authentication
+gem 'pundit'            # Authorization policies
+gem 'doorkeeper'        # OAuth2 provider
+```
+
+### **External Integrations**
+```ruby
+gem 'stripe'            # Payment processing
+gem 'twilio-ruby'       # SMS notifications
+gem 'sendgrid-ruby'     # Email delivery
+gem 'geocoder'          # Address geocoding
+gem 'httparty'          # HTTP client for APIs
+```
+
+### **Business Logic & Validation**
+```ruby
+gem 'dry-validation'    # Schema validation
+gem 'dry-monads'        # Functional programming
+gem 'dry-types'         # Type definitions
+gem 'aasm'              # State machines
+gem 'money-rails'       # Currency handling
+```
+
+### **Performance & Monitoring**
+```ruby
+gem 'rack-cors'         # CORS handling
+gem 'rack-attack'       # Rate limiting
+gem 'newrelic_rpm'      # Performance monitoring
+gem 'sentry-ruby'       # Error tracking
+gem 'opentelemetry-instrumentation-all' # Distributed tracing
+```
+
+### **Testing & Development**
+```ruby
+gem 'rspec-rails'       # Testing framework
+gem 'factory_bot_rails' # Test data generation
+gem 'faker'             # Fake data
+gem 'pact'              # Contract testing
+gem 'vcr'               # HTTP interaction recording
+gem 'rubocop'           # Code linting
+gem 'brakeman'          # Security scanning
+```
+
+## Security & Compliance
+
+### **Authentication & Authorization**
+- Devise for user authentication with strong password policies
+- JWT tokens for API authentication with short expiration
+- Pundit for role-based authorization policies
 - OAuth2 integration for third-party services
 
-### Data Protection
-- Encryption at rest and in transit
-- PII data masking
-- Audit logging for compliance
+### **Data Protection**
+- Rails encryption for sensitive data at rest
+- SSL/TLS encryption for data in transit
+- PII data masking in logs and development databases
+- GDPR compliance with data export/deletion capabilities
 
-### API Security
-- Rate limiting and throttling
-- Input validation and sanitization
-- CORS and CSRF protection
+### **API Security**
+- Rate limiting with Rack::Attack
+- Input validation and sanitization with strong parameters
+- CORS configuration for frontend integration
+- API versioning for backward compatibility
 
-## Performance Optimization
+### **Infrastructure Security**
+- Container security scanning in CI/CD pipeline
+- Secrets management with Rails encrypted credentials
+- Database connection pooling and prepared statements
+- Regular security updates and dependency scanning
 
-### Caching Strategy
-- Redis for frequently accessed data
-- CDN for static content
-- Application-level caching
+## Ruby Performance Optimization
 
-### Database Optimization
-- Read replicas for scaling
-- Database partitioning
-- Optimized indexes
+### **Caching Strategy**
+```ruby
+# Redis for application caching
+config.cache_store = :redis_cache_store, { url: ENV['REDIS_URL'] }
 
-### Real-time Processing
-- WebSocket connections for live updates
-- Message queues for asynchronous processing
-- Event streaming with Apache Kafka
+# Fragment caching for API responses
+json.cache! [@load, @carrier], expires_in: 5.minutes do
+  json.extract! @load, :id, :status, :pickup_time
+end
+
+# Low-level caching for expensive calculations
+Rails.cache.fetch("route_calculation_#{load.id}", expires_in: 1.hour) do
+  RouteOptimizationService.new(load).calculate_optimal_path
+end
+```
+
+### **Database Optimization**
+```ruby
+# Read replicas with Rails 6+ multiple databases
+class ApplicationRecord < ActiveRecord::Base
+  self.abstract_class = true
+  
+  connects_to database: {
+    writing: :primary,
+    reading: :replica
+  }
+end
+
+# Database partitioning for large tables
+class LocationHistory < ApplicationRecord
+  self.table_name_prefix = 'location_histories_'
+  
+  partitioned_by :created_at, period: :month
+end
+
+# Optimized indexes for freight queries
+add_index :loads, [:status, :pickup_time, :delivery_location_id]
+add_index :shipments, [:carrier_profile_id, :status, :created_at]
+```
+
+### **Background Job Optimization**
+```ruby
+# Sidekiq configuration for high throughput
+Sidekiq.configure_server do |config|
+  config.concurrency = 25
+  config.redis = { url: ENV['REDIS_URL'], network_timeout: 5 }
+end
+
+# Batch processing for notifications
+class BatchNotificationJob < ApplicationJob
+  sidekiq_options queue: 'notifications', batch: true
+  
+  def perform(notification_ids)
+    notifications = Notification.where(id: notification_ids)
+    NotificationService.send_batch(notifications)
+  end
+end
+```
+
+### **Real-time Processing with ActionCable**
+```ruby
+# Optimized ActionCable for location tracking
+class TrackingChannel < ApplicationCable::Channel
+  def subscribed
+    stream_from "tracking_#{params[:shipment_id]}"
+    stream_from "carrier_#{params[:carrier_id]}"
+  end
+  
+  def receive(data)
+    # Throttle location updates to prevent spam
+    return if throttled?
+    
+    LocationUpdateJob.perform_async(data.merge(
+      shipment_id: params[:shipment_id],
+      carrier_id: params[:carrier_id]
+    ))
+  end
+  
+  private
+  
+  def throttled?
+    key = "location_throttle_#{params[:carrier_id]}"
+    Rails.cache.read(key).present? || begin
+      Rails.cache.write(key, true, expires_in: 30.seconds)
+      false
+    end
+  end
+end
+```
+
+### **Memory & Performance Monitoring**
+```ruby
+# New Relic configuration for Ruby monitoring
+# config/newrelic.yml focused on freight-specific metrics
+
+# Custom metrics for business KPIs
+NewRelic::Agent.record_metric('Freight/LoadsMatched', matched_loads_count)
+NewRelic::Agent.record_metric('Freight/DeliveryTime', average_delivery_time)
+
+# Sentry for error tracking with freight context
+Sentry.configure do |config|
+  config.before_send = lambda do |event, hint|
+    # Add freight-specific context
+    event.contexts[:freight] = {
+      load_id: Current.load&.id,
+      carrier_id: Current.carrier&.id,
+      shipment_status: Current.shipment&.status
+    }
+    event
+  end
+end
+```
+
+## Ruby Testing Strategy
+
+### **Test Structure**
+```ruby
+# RSpec configuration for freight domain testing
+RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  config.include Devise::Test::IntegrationHelpers, type: :request
+  config.include ActiveJob::TestHelper
+  
+  # Freight-specific test helpers
+  config.include FreightTestHelpers
+  config.include LocationTestHelpers
+  config.include PaymentTestHelpers
+end
+
+# Factory definitions for freight entities
+FactoryBot.define do
+  factory :load do
+    shipper_profile
+    pickup_location { create(:location, :warehouse) }
+    delivery_location { create(:location, :distribution_center) }
+    weight { Faker::Number.decimal(l_digits: 4, r_digits: 2) }
+    offered_rate { Faker::Number.decimal(l_digits: 4, r_digits: 2) }
+    pickup_time { 2.days.from_now }
+    delivery_time { 5.days.from_now }
+    
+    trait :with_route do
+      after(:create) do |load|
+        create(:route, load: load)
+      end
+    end
+    
+    trait :in_transit do
+      status { 'in_transit' }
+      after(:create) do |load|
+        create(:shipment, load: load, status: 'in_transit')
+      end
+    end
+  end
+end
+```
+
+### **Integration & Contract Testing**
+```ruby
+# Pact consumer tests for API contracts
+require 'pact/consumer/rspec'
+
+Pact.consumer 'FreightMobileApp' do
+  has_pact_with 'FreightMatchingAPI' do
+    mock_service :freight_api do
+      port 1234
+      pact_specification_version '2.0.0'
+    end
+  end
+end
+
+describe FreightApiClient do
+  it 'fetches available loads for carrier' do
+    freight_api
+      .given('carrier has valid credentials')
+      .upon_receiving('a request for available loads')
+      .with(
+        method: :get,
+        path: '/api/v1/loads/available',
+        headers: { 'Authorization' => 'Bearer valid_token' }
+      )
+      .will_respond_with(
+        status: 200,
+        headers: { 'Content-Type' => 'application/json' },
+        body: {
+          loads: Pact.each_like(
+            id: 123,
+            pickup_location: Pact.like('Dallas, TX'),
+            delivery_location: Pact.like('Austin, TX'),
+            offered_rate: Pact.like(1500.00)
+          )
+        }
+      )
+    
+    result = FreightApiClient.new.fetch_available_loads
+    expect(result.loads).to be_an(Array)
+  end
+end
+```
+
+This comprehensive Ruby architecture documentation provides a complete overhaul while maintaining the same level of detail and staying at the design/documentation stage. The documentation now reflects modern Ruby practices, Rails conventions, and the specific gems and patterns that would be used in a production freight matching system.

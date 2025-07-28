@@ -1,12 +1,12 @@
-# Digital Freight Matching Platform
+# Digital Freight Matching Platform - Ruby Edition
 
-A comprehensive digital freight matching system designed to connect shippers, carriers, and brokers through intelligent algorithms, reducing deadhead trucking and optimizing freight logistics.
+A comprehensive digital freight matching system built with Ruby on Rails, designed to connect shippers, carriers, and brokers through intelligent algorithms, reducing deadhead trucking and optimizing freight logistics.
 
 ## 🚚 Project Overview
 
 This platform addresses key challenges in the trucking industry:
 - **Deadhead Trucking Reduction**: Minimize empty truck miles through smart matching
-- **Operational Efficiency**: Automate manual freight matching processes
+- **Operational Efficiency**: Automate manual freight matching processes  
 - **Cost Optimization**: Reduce operational costs through route optimization
 - **Real-time Tracking**: Provide visibility throughout the shipping process
 
@@ -18,93 +18,124 @@ Based on analysis of "INFINITY & BEYOND" fleet data:
 - Total operational miles: 1,465 miles across 5 routes
 - Revenue potential: $2,770.59 with optimization
 
-## 🏗️ Architecture
+## 🏗️ Ruby Architecture
 
-### Microservices Architecture
+### Modular Rails Architecture with Microservice Capability
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web Frontend  │    │  Mobile App     │    │ Admin Dashboard │
+│   React Web     │    │ React Native    │    │ Rails Admin     │
+│   Frontend      │    │  Mobile App     │    │   Dashboard     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          └───────────────────────┼───────────────────────┘
                                  │
                     ┌─────────────────┐
-                    │   API Gateway   │
+                    │ Rails API       │
+                    │ Gateway         │
                     └─────────────────┘
                                  │
          ┌───────────────────────┼───────────────────────┐
          │                       │                       │
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  User Service   │    │  Load Service   │    │ Matching Service│
+│ User Management │    │ Load Management │    │ Matching Engine │
+│ Rails Engine    │    │ Rails Engine    │    │ Rails Service   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Route Service   │    │Tracking Service │    │Payment Service  │
+│ Route Service   │    │Real-time Track  │    │Payment Service  │
+│ Rails + Maps    │    │ActionCable+GPS  │    │Rails + Stripe   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## 🛠️ Technology Stack
+## 🛠️ Ruby Technology Stack
 
-### Backend
-- **Framework**: Spring Boot (Java)
+### Backend - Ruby/Rails
+- **Framework**: Ruby on Rails 8.0+ with API mode
+- **Language**: Ruby 3.3+ with modern features
+- **Web Server**: Puma with threading
+- **Background Jobs**: Sidekiq with Redis
 - **Database**: PostgreSQL (Primary), MongoDB (Analytics)
-- **Cache**: Redis
-- **Message Queue**: Apache Kafka
-- **API**: REST + GraphQL
+- **Cache**: Redis for sessions, caching, ActionCable
+- **Message Queue**: Apache Kafka with Karafka gem
+- **API**: REST + JSON API with Jbuilder
+- **Real-time**: ActionCable for WebSocket connections
+
+### Key Ruby Gems
+- **Authentication**: Devise + JWT
+- **Authorization**: Pundit for policies  
+- **State Machine**: AASM for load status
+- **Background Jobs**: Sidekiq + sidekiq-cron
+- **Payments**: Stripe gem
+- **Geocoding**: Geocoder gem
+- **Search**: Searchkick (Elasticsearch)
+- **Testing**: RSpec, FactoryBot, Pact
+- **Event Sourcing**: Rails Event Store
+- **Functional Programming**: dry-rb ecosystem
 
 ### Frontend
 - **Web**: React.js with TypeScript
 - **Mobile**: React Native
 - **State Management**: Redux Toolkit
-- **UI Framework**: Material-UI / Ant Design
+- **UI Framework**: Material-UI / Tailwind CSS
 
 ### Infrastructure
-- **Cloud**: AWS / Docker containers
-- **Orchestration**: Kubernetes
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Prometheus + Grafana
+- **Containerization**: Docker with Ruby 3.3 Alpine
+- **Orchestration**: Kubernetes or Kamal (Rails 8)
+- **CI/CD**: GitHub Actions with Ruby tests
+- **Monitoring**: New Relic, Sentry, OpenTelemetry
 
-### AI/ML
-- **Matching Algorithm**: Python with TensorFlow
-- **Route Optimization**: OR-Tools
-- **Analytics**: Apache Spark
+### External Integrations
+- **Maps**: Google Maps API
+- **Payments**: Stripe Connect for marketplace
+- **Notifications**: SendGrid (email), Twilio (SMS)
+- **Analytics**: Custom Ruby analytics service
 
-## 📁 Project Structure
+## 📁 Ruby Project Structure
 
 ```
 digital-freight-matching/
-├── backend/
-│   ├── api-gateway/           # API Gateway service
-│   ├── user-service/          # User management
-│   ├── load-service/          # Load posting and management
-│   ├── matching-service/      # AI-powered matching
-│   ├── route-service/         # Route optimization
-│   ├── tracking-service/      # Real-time tracking
-│   ├── payment-service/       # Payment processing
-│   ├── notification-service/  # Notifications
-│   └── analytics-service/     # Analytics and reporting
+├── backend/                   # Main Rails application
+│   ├── app/
+│   │   ├── models/           # ActiveRecord models
+│   │   ├── controllers/api/v1/ # API controllers
+│   │   ├── jobs/             # Sidekiq background jobs
+│   │   ├── services/         # Business logic services
+│   │   ├── channels/         # ActionCable channels
+│   │   └── serializers/      # JSON API serializers
+│   ├── engines/              # Rails Engines for modularity
+│   │   ├── user_management/
+│   │   ├── load_matching/
+│   │   ├── payment_processing/
+│   │   └── real_time_tracking/
+│   ├── config/
+│   │   ├── karafka.rb        # Kafka configuration
+│   │   ├── sidekiq.yml       # Background job config
+│   │   └── database.yml      # Multi-database setup
+│   └── lib/
+│       ├── matching_algorithms/ # Ruby ML algorithms
+│       └── route_optimization/  # Ruby optimization logic
 ├── frontend/
 │   ├── web-app/              # React web application
-│   └── admin-dashboard/      # Admin interface
+│   └── admin-dashboard/      # Rails admin interface
 ├── mobile/
 │   └── carrier-app/          # React Native mobile app
 ├── infrastructure/
-│   ├── docker/               # Docker configurations
-│   ├── kubernetes/           # K8s manifests
-│   └── terraform/            # Infrastructure as code
-├── docs/                     # Documentation
-├── scripts/                  # Deployment scripts
-└── tests/                    # Integration tests
-```
+│   ├── docker/
+│   │   └── Dockerfile.rails  # Ruby container
+│   ├── kamal/                # Rails 8 deployment
+│   └── kubernetes/           # K8s manifests for Ruby
+└── docs/                     # Documentation
 
-## 🚀 Quick Start
+## 🚀 Ruby Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Java 17+
+- Ruby 3.3+
+- Rails 8.0+
+- Node.js 18+ (for frontend)
 - Docker & Docker Compose
 - PostgreSQL 14+
 - Redis 6+
+- MongoDB 6+ (for analytics)
 
 ### Local Development Setup
 
@@ -116,21 +147,27 @@ digital-freight-matching/
 
 2. **Start infrastructure services**
    ```bash
-   cd infrastructure/docker
-   docker-compose up -d postgres redis kafka
+   docker-compose up -d postgres redis mongodb kafka elasticsearch
    ```
 
-3. **Backend Services**
+3. **Backend Rails Setup**
    ```bash
-   # Start API Gateway
-   cd backend/api-gateway
-   ./mvnw spring-boot:run
+   cd backend
    
-   # Start User Service
-   cd ../user-service
-   ./mvnw spring-boot:run
+   # Install Ruby dependencies
+   bundle install
    
-   # Start other services...
+   # Setup database
+   rails db:create db:migrate db:seed
+   
+   # Start Rails server
+   rails server -p 3000
+   
+   # In separate terminal - Start Sidekiq
+   bundle exec sidekiq -C config/sidekiq.yml
+   
+   # In separate terminal - Start Karafka consumer
+   bundle exec karafka server
    ```
 
 4. **Frontend Development**
@@ -147,24 +184,78 @@ digital-freight-matching/
    npm run android  # or npm run ios
    ```
 
-## 🔧 Configuration
+## 🔧 Ruby Configuration
 
 ### Environment Variables
 ```bash
-# Database
-DATABASE_URL=postgresql://localhost:5432/freight_matching
-REDIS_URL=redis://localhost:6379
+# Rails Configuration
+RAILS_ENV=development
+SECRET_KEY_BASE=your_secret_key_base
 
-# External APIs
+# Database URLs
+DATABASE_URL=postgresql://freight_user:freight_pass@localhost:5432/freight_matching
+REDIS_URL=redis://localhost:6379/0
+MONGODB_URL=mongodb://freight_user:freight_pass@localhost:27017/freight_analytics
+ELASTICSEARCH_URL=http://localhost:9200
+
+# Kafka Configuration
+KAFKA_URL=localhost:9092
+
+# External Service APIs
 GOOGLE_MAPS_API_KEY=your_maps_api_key
-STRIPE_SECRET_KEY=your_stripe_key
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+SENDGRID_API_KEY=your_sendgrid_key
+TWILIO_ACCOUNT_SID=your_twilio_sid
+TWILIO_AUTH_TOKEN=your_twilio_token
 
-# JWT
+# JWT Configuration (for API authentication)
 JWT_SECRET=your_jwt_secret
 JWT_EXPIRATION=86400
 
-# Kafka
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+# Rails-specific settings
+RAILS_SERVE_STATIC_FILES=true
+RAILS_LOG_TO_STDOUT=true
+```
+
+### Ruby Gemfile Overview
+```ruby
+# Core Rails
+gem 'rails', '~> 8.0'
+gem 'puma'
+gem 'bootsnap'
+
+# Database & Storage
+gem 'pg'                    # PostgreSQL
+gem 'redis'                 # Redis client
+gem 'mongoid'               # MongoDB ODM
+
+# Background Jobs & Messaging
+gem 'sidekiq'               # Background processing
+gem 'sidekiq-cron'          # Scheduled jobs
+gem 'karafka'               # Kafka integration
+
+# Authentication & Authorization
+gem 'devise'                # User authentication
+gem 'jwt'                   # Token authentication
+gem 'pundit'                # Authorization policies
+
+# Business Logic & Validation
+gem 'aasm'                  # State machines
+gem 'dry-validation'        # Schema validation
+gem 'dry-monads'            # Functional programming
+
+# External Integrations
+gem 'stripe'                # Payments
+gem 'geocoder'              # Address geocoding
+gem 'searchkick'            # Elasticsearch
+gem 'twilio-ruby'           # SMS
+gem 'sendgrid-ruby'         # Email
+
+# Performance & Monitoring
+gem 'newrelic_rpm'          # Performance monitoring
+gem 'sentry-ruby'           # Error tracking
+gem 'rack-cors'             # CORS handling
 ```
 
 ## 📱 Key Features

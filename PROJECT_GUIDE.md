@@ -1,8 +1,8 @@
-# Project Implementation Guide
+# Ruby Project Implementation Guide
 
 ## 🎯 Project Summary
 
-This digital freight matching platform addresses the critical inefficiencies in the trucking industry, specifically targeting the problem of deadhead trucking (empty truck miles) that costs the industry billions annually. Based on real industry data analysis, our solution can improve route margins from -4% to 24.24% through intelligent matching and optimization.
+This digital freight matching platform addresses the critical inefficiencies in the trucking industry, specifically targeting the problem of deadhead trucking (empty truck miles) that costs the industry billions annually. Built with modern Ruby on Rails architecture, our solution can improve route margins from -4% to 24.24% through intelligent matching and optimization.
 
 ## 📊 Key Business Insights from Data Analysis
 
@@ -44,9 +44,27 @@ This digital freight matching platform addresses the critical inefficiencies in 
 - **ROI**: 150% by Year 3
 - **Market Share**: 0.1% of addressable market
 
-## 🏗️ Technical Architecture
+## 🏗️ Ruby Technical Architecture
 
-### System Overview
+### Rails Modular Monolith Strategy
+```
+freight_matching_platform/
+├── app/
+│   ├── models/              # ActiveRecord models with associations
+│   ├── controllers/api/v1/  # RESTful API controllers
+│   ├── jobs/                # Sidekiq background jobs
+│   ├── services/            # Business logic services
+│   ├── channels/            # ActionCable real-time channels
+│   └── serializers/         # JSON API response formatting
+├── engines/                 # Rails Engines for modularity
+│   ├── user_management/     # Authentication & user profiles
+│   ├── load_matching/       # Core matching algorithms
+│   ├── payment_processing/  # Stripe integration
+│   └── real_time_tracking/  # GPS & ActionCable
+└── config/
+    ├── karafka.rb          # Kafka event streaming
+    ├── sidekiq.yml         # Background job processing
+    └── database.yml        # Multi-database configuration
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Digital Freight Matching Platform         │
