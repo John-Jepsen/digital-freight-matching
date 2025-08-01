@@ -1,8 +1,6 @@
 # Digital Freight Matching Platform
 
-A comprehensive digital freight matching system bui- Comprehensive audit logging
-
-## Deploymentwith Ruby on Rails, designed to connect shippers, carriers, and brokers through intelligent algorithms, reducing deadhead trucking and optimizing freight logistics.
+A comprehensive digital freight matching system built with Ruby on Rails, designed to connect shippers, carriers, and brokers through intelligent algorithms, reducing deadhead trucking and optimizing freight logistics.
 
 
 This platform is **fully functional** with:
