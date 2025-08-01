@@ -1,0 +1,242 @@
+version: '3.8'
+
+# Simplified docker-compose for current workspace structure
+# This only includes services that actually exist in the workspace
+
+services:
+  # Ruby Application Services
+  freight_api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_rails_api
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      MONGODB_URL: mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
+      KAFKA_URL: kafka:9092
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - mongodb
+      - elasticsearch
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec rails server -b 0.0.0.0
+
+  # Sidekiq Background Jobs
+  freight_sidekiq:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_sidekiq
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      MONGODB_URL: mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
+      KAFKA_URL: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+  # Karafka Kafka Consumer
+  freight_karafka:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rails
+    container_name: freight_karafka
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      KAFKA_URL: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - ./backend:/app
+      - gem_cache:/usr/local/bundle
+    networks:
+      - freight_network
+    command: bundle exec karafka server
+
+  # Database Services
+  postgres:
+    image: postgres:14-alpine
+    container_name: freight_postgres
+    environment:
+      POSTGRES_DB: freight_matching
+      POSTGRES_USER: freight_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - freight_network
+
+  # Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: freight_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - freight_network
+
+  # Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: freight_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - freight_network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: freight_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    networks:
+      - freight_network
+
+  # Analytics Database
+  mongodb:
+    image: mongo:6
+    container_name: freight_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: freight_user
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-freight_pass_changeme}
+      MONGO_INITDB_DATABASE: freight_analytics
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - freight_network
+
+  # Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: freight_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - freight_network
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: freight_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - freight_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: freight_grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123_changeme}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - freight_network
+
+  # Web Frontend (if it exists)
+  web-frontend:
+    build:
+      context: ./frontend/web-app
+      dockerfile: Dockerfile
+    container_name: freight_web_frontend
+    ports:
+      - "3002:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - freight_api
+    networks:
+      - freight_network
+
+  # Admin Dashboard (if it exists)
+  admin-dashboard:
+    build:
+      context: ./frontend/admin-dashboard
+      dockerfile: Dockerfile
+    container_name: freight_admin_dashboard
+    ports:
+      - "3003:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+    depends_on:
+      - freight_api
+    networks:
+      - freight_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+  gem_cache:
+
+networks:
+  freight_network:
+    driver: bridge
