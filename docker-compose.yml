@@ -1,5 +1,12 @@
 version: '3.8'
 
+# SECURITY NOTES:
+# - All exposed ports should be protected by a Web Application Firewall (WAF) in production
+# - Use strong passwords and rotate them regularly 
+# - Consider using secrets management services (AWS Secrets Manager, HashiCorp Vault)
+# - Enable SSL/TLS for all external communications
+# - Review and restrict network access for each service based on principle of least privilege
+
 services:
   # Ruby Application Services
   freight_api:
@@ -11,10 +18,10 @@ services:
       - "3000:3000"
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
       REDIS_URL: redis://redis:6379/0
       ELASTICSEARCH_URL: http://elasticsearch:9200
-      MONGODB_URL: mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      MONGODB_URL: mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
       KAFKA_URL: kafka:9092
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
@@ -43,10 +50,10 @@ services:
     container_name: freight_sidekiq
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
       REDIS_URL: redis://redis:6379/0
       ELASTICSEARCH_URL: http://elasticsearch:9200
-      MONGODB_URL: mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      MONGODB_URL: mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
       KAFKA_URL: kafka:9092
     depends_on:
       - postgres
@@ -67,7 +74,7 @@ services:
     container_name: freight_karafka
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgresql://freight_user:freight_pass@postgres:5432/freight_matching
+      DATABASE_URL: postgresql://freight_user:${POSTGRES_PASSWORD:-freight_pass_changeme}@postgres:5432/freight_matching
       REDIS_URL: redis://redis:6379/0
       KAFKA_URL: kafka:9092
     depends_on:
@@ -87,7 +94,7 @@ services:
     environment:
       POSTGRES_DB: freight_matching
       POSTGRES_USER: freight_user
-      POSTGRES_PASSWORD: freight_pass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
     ports:
       - "5432:5432"
     volumes:
@@ -141,7 +148,7 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: freight_user
-      MONGO_INITDB_ROOT_PASSWORD: freight_pass
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-freight_pass_changeme}
       MONGO_INITDB_DATABASE: freight_analytics
     volumes:
       - mongo_data:/data/db
@@ -187,7 +194,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123_changeme}
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -297,7 +304,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - DATABASE_URL=jdbc:postgresql://postgres:5432/freight_matching
-      - MONGODB_URI=mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      - MONGODB_URI=mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - postgres
@@ -353,7 +360,7 @@ services:
       - "8088:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - MONGODB_URI=mongodb://freight_user:freight_pass@mongodb:27017/freight_analytics
+      - MONGODB_URI=mongodb://freight_user:${MONGODB_PASSWORD:-freight_pass_changeme}@mongodb:27017/freight_analytics
       - ELASTICSEARCH_HOST=elasticsearch:9200
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -401,6 +408,7 @@ volumes:
   elasticsearch_data:
   prometheus_data:
   grafana_data:
+  gem_cache:
 
 networks:
   freight_network:

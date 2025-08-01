@@ -546,6 +546,53 @@ CREATE INDEX idx_active_storage_attachments_record ON active_storage_attachments
 CREATE INDEX idx_active_storage_variant_records_blob ON active_storage_variant_records(blob_id, variation_digest);
 -- ActionText indexes  
 CREATE INDEX idx_action_text_rich_texts_record ON action_text_rich_texts(record_type, record_id, name);
+
+-- Row-Level Security (RLS) Policies for data protection
+-- Enable RLS on sensitive tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Users table RLS: Users can only see their own data, admins can see all
+CREATE POLICY users_own_data ON users 
+  FOR ALL 
+  TO PUBLIC 
+  USING (id = current_setting('app.current_user_id', true)::bigint OR 
+         current_setting('app.current_user_type', true) = 'admin');
+
+-- Payments table RLS: Users can only see payments they're involved in
+CREATE POLICY payments_participant_access ON payments 
+  FOR ALL 
+  TO PUBLIC 
+  USING (payer_id = current_setting('app.current_user_id', true)::bigint OR 
+         payee_id = current_setting('app.current_user_id', true)::bigint OR
+         current_setting('app.current_user_type', true) = 'admin');
+
+-- Audit logs RLS: Only admins can access audit logs
+CREATE POLICY audit_logs_admin_only ON audit_logs 
+  FOR ALL 
+  TO PUBLIC 
+  USING (current_setting('app.current_user_type', true) = 'admin');
+
+-- JSONB field validation constraints
+-- Add validation for ratings categories JSONB
+ALTER TABLE ratings ADD CONSTRAINT valid_categories_jsonb 
+  CHECK (categories IS NULL OR jsonb_typeof(categories) = 'object');
+
+-- Add validation for route data JSONB  
+ALTER TABLE routes ADD CONSTRAINT valid_route_data_jsonb 
+  CHECK (route_data IS NULL OR jsonb_typeof(route_data) = 'object');
+
+-- Add validation for notifications metadata JSONB
+ALTER TABLE notifications ADD CONSTRAINT valid_metadata_jsonb 
+  CHECK (metadata IS NULL OR jsonb_typeof(metadata) = 'object');
+
+-- Ensure audit log JSONB fields are proper objects
+ALTER TABLE audit_logs ADD CONSTRAINT valid_old_values_jsonb 
+  CHECK (old_values IS NULL OR jsonb_typeof(old_values) = 'object');
+
+ALTER TABLE audit_logs ADD CONSTRAINT valid_new_values_jsonb 
+  CHECK (new_values IS NULL OR jsonb_typeof(new_values) = 'object');
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = CURRENT_TIMESTAMP;
 RETURN NEW;
@@ -580,28 +627,25 @@ CREATE TRIGGER update_system_configs_updated_at BEFORE
 UPDATE ON system_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_action_text_rich_texts_updated_at BEFORE
 UPDATE ON action_text_rich_texts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
--- Insert sample admin user (Devise encrypted password format)
--- Password: admin123 (this should be properly hashed using Devise/bcrypt)
-INSERT INTO users (
-        email,
-        encrypted_password,
-        first_name,
-        last_name,
-        user_type,
-        active,
-        email_verified,
-        confirmed_at
-    )
-VALUES (
-        'admin@freightmatch.com',
-        '$2a$12$EXAMPLE_BCRYPT_HASH_FOR_DEVISE',
-        'System',
-        'Administrator',
-        'admin',
-        TRUE,
-        TRUE,
-        CURRENT_TIMESTAMP
-    );
+-- SECURITY NOTE: Admin users should be created through secure application processes
+-- Never insert hardcoded credentials into database initialization scripts
+-- Use proper credential management:
+-- 1. Generate admin users through Rails console: User.create!(email: '...', password: '...')
+-- 2. Use environment variables or secure secrets management (AWS Secrets Manager, etc.)
+-- 3. Implement proper password policies and MFA for admin accounts
+-- 
+-- Example secure admin creation (run in Rails console):
+-- admin = User.new(
+--   email: ENV['ADMIN_EMAIL'],
+--   password: SecureRandom.base64(32),
+--   first_name: 'System',
+--   last_name: 'Administrator', 
+--   user_type: 'admin',
+--   active: true,
+--   email_verified: true,
+--   confirmed_at: Time.current
+-- )
+-- admin.save!
 -- Database comments (Rails-style documentation)
 COMMENT ON DATABASE freight_matching IS 'Digital Freight Matching Platform Database - Rails Edition';
 COMMENT ON TABLE users IS 'Devise-based user accounts for all platform participants';

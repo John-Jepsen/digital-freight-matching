@@ -1,0 +1,74 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Database credentials and configuration
+config/database.yml
+config/secrets.yml
+
+# Application logs
+*.log
+log/*
+
+# Temporary files
+tmp/*
+!tmp/.keep
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ruby/Rails
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Rails
+.bundle/
+vendor/bundle
+config/spring.rb
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Security-related files that should never be committed
+*.pem
+*.key
+*.crt
+*.p12
+id_rsa*
+*.pub
+
+# Backup files
+*.backup
+*.bak
+*.sql.gz
