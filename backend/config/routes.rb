@@ -11,17 +11,36 @@ Rails.application.routes.draw do
       # Health check
       get 'health', to: 'health#show'
       
+      # Authentication routes
+      namespace :auth do
+        post 'register', to: 'auth#register'
+        post 'login', to: 'auth#login'
+        delete 'logout', to: 'auth#logout'
+        get 'me', to: 'auth#me'
+        post 'refresh', to: 'auth#refresh'
+        post 'forgot_password', to: 'auth#forgot_password'
+        post 'reset_password', to: 'auth#reset_password'
+      end
+      
       # User management
       resources :users do
         collection do
-          post :register
-          post :login
-          delete :logout
+          get :profile
+          put :update_profile
+          post :change_password
+        end
+        member do
+          post :activate
+          post :deactivate
+          post :suspend
         end
       end
       
       # Load management
       resources :loads do
+        collection do
+          get :search
+        end
         member do
           post :book
           post :complete
