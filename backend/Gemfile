@@ -2,18 +2,53 @@ source "https://rubygems.org"
 
 # Core Rails
 gem "rails", "~> 8.0.2"
-gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
-gem "jbuilder"
-gem "bcrypt", "~> 3.1.7"
 gem "bootsnap", require: false
 
-# Essential for API
-gem "rack-cors"
+# Database & Storage
+gem "pg", "~> 1.1"                    # PostgreSQL
+gem "redis", "~> 5.0"                 # Redis client
 
-# Basic Redis support
-gem "redis"
+# Background Jobs & Messaging
+gem "sidekiq", "~> 7.0"               # Background processing
+gem "sidekiq-cron", "~> 1.12"         # Scheduled jobs
+
+# Authentication & Authorization
+gem "devise", "~> 4.9"                # User authentication
+gem "jwt", "~> 2.7"                   # Token authentication
+gem "pundit", "~> 2.3"                # Authorization policies
+
+# Business Logic & Validation
+gem "aasm", "~> 5.5"                  # State machines
+gem "dry-validation", "~> 1.10"       # Schema validation
+
+# External Integrations
+gem "stripe", "~> 10.0"               # Payments
+gem "geocoder", "~> 1.8"              # Address geocoding
+gem "twilio-ruby", "~> 6.0"           # SMS
+gem "net-smtp"                        # Email (Rails 7+ requirement)
+
+# Performance & Monitoring
+gem "rack-cors"                       # CORS handling
+gem "jbuilder"                        # JSON APIs
+
+# Development & Utilities
+gem "bcrypt", "~> 3.1.7"              # Password hashing
 
 group :development, :test do
-  # Minimal development dependencies
+  gem "debug", platforms: %i[ mri windows ]
+  gem "rspec-rails", "~> 6.0"
+  gem "factory_bot_rails", "~> 6.4"
+  gem "faker", "~> 3.2"
+end
+
+group :development do
+  gem "annotate", "~> 3.2"            # Model annotations
+end
+
+group :test do
+  gem "shoulda-matchers", "~> 5.3"
+  gem "database_cleaner-active_record", "~> 2.1"
+  gem "webmock", "~> 3.19"
+  gem "vcr", "~> 6.2"
 end
