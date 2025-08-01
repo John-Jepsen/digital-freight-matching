@@ -12,34 +12,23 @@ class Api::V1::MatchingController < ApplicationController
       return render json: { error: 'Access denied' }, status: :forbidden
     end
     
-    # Find eligible carriers
-    eligible_carriers = Match.find_eligible_carriers(load, matching_options)
+    # Use service to find eligible carriers
+    service = MatchingAlgorithmService.new(load, matching_options)
+    result = service.find_eligible_carriers
     
-    # Calculate detailed matching scores
-    matches_data = eligible_carriers.map do |carrier|
-      {
-        carrier: carrier,
-        match_score: load.matching_score_for(carrier),
-        distance_to_pickup: carrier.distance_from(load.pickup_coordinates),
-        estimated_cost: calculate_estimated_cost(load, carrier),
-        compatibility_factors: calculate_compatibility_factors(load, carrier)
+    if result[:success]
+      render json: {
+        load: load_summary(load),
+        potential_matches: result[:carriers].map { |data| carrier_match_response(data) },
+        matching_criteria: result[:search_criteria],
+        total_found: result[:total_found]
       }
+    else
+      render json: {
+        error: 'Carrier search failed',
+        details: result[:errors]
+      }, status: :internal_server_error
     end
-    
-    # Sort by match score
-    matches_data.sort_by! { |data| -data[:match_score] }
-    
-    render json: {
-      load: load_summary(load),
-      potential_matches: matches_data.map { |data| carrier_match_response(data) },
-      matching_criteria: {
-        equipment_type: load.equipment_type,
-        pickup_location: "#{load.pickup_city}, #{load.pickup_state}",
-        delivery_location: "#{load.delivery_city}, #{load.delivery_state}",
-        weight: load.weight,
-        special_requirements: load.special_requirements
-      }
-    }
     
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Load not found' }, status: :not_found
@@ -52,52 +41,24 @@ class Api::V1::MatchingController < ApplicationController
     carrier = get_user_carrier
     return render json: { error: 'Carrier profile required' }, status: :bad_request unless carrier
     
-    # Find available loads that match carrier capabilities
-    available_loads = Load.available
+    # Use LoadSearchService for consistency
+    search_filters = { page: params[:page], per_page: params[:per_page] }
+    service = LoadSearchService.new(carrier, search_filters)
+    result = service.search
     
-    # Filter by carrier capabilities
-    compatible_loads = available_loads.select do |load|
-      load.can_be_matched_with?(carrier)
-    end
-    
-    # Calculate matching scores
-    loads_with_scores = compatible_loads.map do |load|
-      {
-        load: load,
-        match_score: load.matching_score_for(carrier),
-        distance_to_pickup: carrier.distance_from(load.pickup_coordinates),
-        estimated_revenue: estimate_revenue(load, carrier),
-        profit_factors: calculate_profit_factors(load, carrier)
+    if result[:success]
+      render json: {
+        carrier: carrier_summary(carrier),
+        available_loads: result[:loads].map { |data| load_match_response(data) },
+        matching_criteria: result[:carrier_info],
+        meta: result[:pagination]
       }
+    else
+      render json: {
+        error: 'Load search failed',
+        details: result[:errors]
+      }, status: :internal_server_error
     end
-    
-    # Sort by match score and apply pagination
-    loads_with_scores.sort_by! { |data| -data[:match_score] }
-    
-    # Pagination
-    page = (params[:page] || 1).to_i
-    per_page = (params[:per_page] || 20).to_i
-    total_count = loads_with_scores.count
-    offset = (page - 1) * per_page
-    
-    paginated_loads = loads_with_scores[offset, per_page] || []
-    
-    render json: {
-      carrier: carrier_summary(carrier),
-      available_loads: paginated_loads.map { |data| load_match_response(data) },
-      matching_criteria: {
-        equipment_types: carrier.equipment_list,
-        service_areas: carrier.service_area_list,
-        current_location: carrier.current_location,
-        fleet_capacity: carrier.available_capacity
-      },
-      meta: {
-        current_page: page,
-        per_page: per_page,
-        total_count: total_count,
-        total_pages: (total_count.to_f / per_page).ceil
-      }
-    }
   end
 
   # GET /api/v1/matching/recommendations
@@ -392,14 +353,27 @@ class Api::V1::MatchingController < ApplicationController
   end
 
   def load_match_response(data)
-    load = data[:load]
-    {
-      load: load_summary(load),
-      match_score: data[:match_score],
-      distance_to_pickup: data[:distance_to_pickup],
-      estimated_revenue: data[:estimated_revenue],
-      profit_factors: data[:profit_factors]
-    }
+    if data.is_a?(Hash) && data[:load]
+      # Data from service
+      load = data[:load]
+      {
+        load: load_summary(load),
+        match_score: data[:score],
+        distance_to_pickup: data[:distance_to_pickup],
+        estimated_revenue: data[:revenue_estimate],
+        profit_factors: data[:profit_factors]
+      }
+    else
+      # Legacy data structure
+      load = data[:load]
+      {
+        load: load_summary(load),
+        match_score: data[:match_score],
+        distance_to_pickup: data[:distance_to_pickup],
+        estimated_revenue: data[:estimated_revenue],
+        profit_factors: data[:profit_factors]
+      }
+    end
   end
 
   def detailed_match_response(match)
