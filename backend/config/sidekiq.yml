@@ -1,0 +1,15 @@
+:concurrency: 5
+
+:queues:
+  - critical
+  - default
+  - low
+
+:redis:
+  url: <%= ENV.fetch('REDIS_URL', 'redis://localhost:6379/0') %>
+
+:cron:
+  # Example: Update carrier locations every 5 minutes
+  # carrier_location_sync: 
+  #   cron: '*/5 * * * *'
+  #   class: CarrierLocationSyncJob

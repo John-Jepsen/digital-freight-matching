@@ -21,18 +21,24 @@ RUN apt-get update -qq && \
     git \
     libpq-dev \
     pkg-config \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set environment
 ENV RAILS_ENV="development" \
-    BUNDLE_PATH="/usr/local/bundle"
+    BUNDLE_PATH="/usr/local/bundle" \
+    GEM_HOME="/usr/local/bundle" \
+    GEM_PATH="/usr/local/bundle" \
+    BUNDLE_SILENCE_ROOT_WARNING=1
 
-# Install bundler
-RUN gem install bundler
-
-# Install application gems
+# Copy Gemfiles first for better Docker layer caching
 COPY Gemfile Gemfile.lock ./
-RUN bundle install
+
+# Install bundler and gems
+RUN gem install bundler:2.7.1 --no-document && \
+    bundle config set --local deployment 'false' && \
+    bundle config set --local without 'test' && \
+    bundle install --jobs 4 --retry 3
 
 # Copy application code
 COPY . .

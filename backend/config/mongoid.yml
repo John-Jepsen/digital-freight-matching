@@ -1,0 +1,27 @@
+development:
+  clients:
+    default:
+      database: freight_analytics
+      hosts:
+        - localhost:27017
+      options:
+        # Note that all options listed below are Ruby driver client options (the mongo gem).
+        # Please refer to the driver documentation for all available options.
+        # https://docs.mongodb.com/ruby-driver/master/api/
+
+test:
+  clients:
+    default:
+      database: freight_analytics_test
+      hosts:
+        - localhost:27017
+      options:
+        read:
+          mode: :primary
+        max_pool_size: 1
+
+production:
+  clients:
+    default:
+      uri: <%= ENV['MONGODB_URL'] %>
+      options:
