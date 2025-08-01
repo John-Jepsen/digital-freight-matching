@@ -1,0 +1,29 @@
+# PostgreSQL configuration for Digital Freight Matching Platform
+#
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+
+test:
+  <<: *default
+  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>_test
+  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
+  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
