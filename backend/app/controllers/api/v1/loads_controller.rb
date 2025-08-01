@@ -42,20 +42,19 @@ class Api::V1::LoadsController < ApplicationController
 
   # POST /api/v1/loads
   def create
-    @load = current_user.shipper_profile.loads.build(load_params)
+    # Use service to handle load creation
+    service = LoadCreationService.new(current_user, load_params)
+    result = service.create
     
-    if @load.save
-      # Automatically create matches with eligible carriers
-      CreateMatchesJob.perform_later(@load.id) if @load.available_for_matching?
-      
+    if result[:success]
       render json: {
-        message: 'Load created successfully',
-        load: detailed_load_response(@load)
+        message: result[:message],
+        load: detailed_load_response(result[:load])
       }, status: :created
     else
       render json: {
         error: 'Load creation failed',
-        details: @load.errors.full_messages
+        details: result[:errors]
       }, status: :unprocessable_entity
     end
   end
@@ -165,47 +164,29 @@ class Api::V1::LoadsController < ApplicationController
     carrier = get_user_carrier
     return render json: { error: 'Carrier profile required' }, status: :bad_request unless carrier
     
-    @loads = Load.available
+    # Use service to handle load search
+    search_filters = search_params
+    service = LoadSearchService.new(carrier, search_filters)
+    result = service.search
     
-    # Apply search filters
-    @loads = apply_search_filters(@loads, carrier)
-    
-    # Calculate match scores and sort by relevance
-    loads_with_scores = @loads.map do |load|
-      {
-        load: load,
-        score: load.matching_score_for(carrier),
-        can_match: load.can_be_matched_with?(carrier)
+    if result[:success]
+      render json: {
+        loads: result[:loads].map do |item|
+          response = load_response(item[:load])
+          response[:match_score] = item[:score]
+          response[:distance_to_pickup] = item[:distance_to_pickup]
+          response[:revenue_estimate] = item[:revenue_estimate]
+          response
+        end,
+        meta: result[:pagination],
+        search_info: result[:search_criteria]
       }
+    else
+      render json: {
+        error: 'Search failed',
+        details: result[:errors]
+      }, status: :internal_server_error
     end
-    
-    # Filter out loads that can't be matched and sort by score
-    loads_with_scores = loads_with_scores
-                       .select { |item| item[:can_match] }
-                       .sort_by { |item| -item[:score] }
-    
-    # Paginate
-    page = (params[:page] || 1).to_i
-    per_page = (params[:per_page] || 25).to_i
-    total_count = loads_with_scores.count
-    offset = (page - 1) * per_page
-    
-    paginated_loads = loads_with_scores[offset, per_page] || []
-    
-    render json: {
-      loads: paginated_loads.map do |item|
-        response = load_response(item[:load])
-        response[:match_score] = item[:score]
-        response[:distance_to_pickup] = carrier.distance_from(item[:load].pickup_coordinates)
-        response
-      end,
-      meta: {
-        current_page: page,
-        per_page: per_page,
-        total_count: total_count,
-        total_pages: (total_count.to_f / per_page).ceil
-      }
-    }
   end
 
   private
@@ -289,6 +270,14 @@ class Api::V1::LoadsController < ApplicationController
       :is_hazmat, :is_expedited, :is_team_driver, :temperature_controlled,
       :temperature_min, :temperature_max, :expires_at
     )
+  end
+
+  def search_params
+    params.permit(
+      :equipment_type, :origin_state, :destination_state, :pickup_date_from,
+      :pickup_date_to, :min_rate, :max_rate, :max_distance, :max_weight,
+      :expedited, :hazmat, :temperature_controlled, :search, :page, :per_page
+    ).to_h
   end
 
   def apply_filters(loads)
