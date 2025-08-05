@@ -211,8 +211,9 @@ class Load < ApplicationRecord
   end
 
   def rate_per_mile
-    return 0 if distance_miles.blank? || distance_miles.zero?
-    total_rate / distance_miles
+    miles = distance_miles
+    return 0 if miles.blank? || miles.zero?
+    total_rate / miles
   end
 
   def days_in_transit
