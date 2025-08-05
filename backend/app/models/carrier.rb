@@ -233,7 +233,14 @@ class Carrier < ApplicationRecord
     return if scac_code.present?
     
     # Generate SCAC from company name or MC number
-    base = company_name.present? ? company_name : "MC#{mc_number}"
+    if company_name.present?
+      base = company_name
+    elsif mc_number.present?
+      base = "MC#{mc_number}"
+    else
+      base = "UNKN"  # Default fallback for unknown carriers
+    end
+    
     self.scac_code = base.gsub(/[^A-Z]/, '')[0,4].ljust(4, 'X')
     
     # Ensure uniqueness
