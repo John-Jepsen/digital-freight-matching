@@ -43,22 +43,22 @@ class Match < ApplicationRecord
 
   # Enums
   enum status: {
-    pending: 'pending',
-    offered: 'offered',
-    accepted: 'accepted',
-    rejected: 'rejected',
-    expired: 'expired',
-    cancelled: 'cancelled'
+  pending: "pending",
+  offered: "offered",
+  accepted: "accepted",
+  rejected: "rejected",
+  expired: "expired",
+  cancelled: "cancelled"
   }
 
   enum rejection_reason: {
-    rate_too_low: 'rate_too_low',
-    timing_conflict: 'timing_conflict',
-    equipment_unavailable: 'equipment_unavailable',
-    location_too_far: 'location_too_far',
-    shipper_requirements: 'shipper_requirements',
-    carrier_policy: 'carrier_policy',
-    other: 'other'
+  rate_too_low: "rate_too_low",
+  timing_conflict: "timing_conflict",
+  equipment_unavailable: "equipment_unavailable",
+  location_too_far: "location_too_far",
+  shipper_requirements: "shipper_requirements",
+  carrier_policy: "carrier_policy",
+  other: "other"
   }
 
   # State Machine

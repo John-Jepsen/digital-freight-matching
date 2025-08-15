@@ -36,52 +36,52 @@ class CargoDetail < ApplicationRecord
 
   # Enums
   enum unit_type: {
-    pieces: 'pieces',
-    pallets: 'pallets',
-    boxes: 'boxes',
-    cartons: 'cartons',
-    crates: 'crates',
-    bundles: 'bundles',
-    rolls: 'rolls',
-    drums: 'drums',
-    bags: 'bags',
-    containers: 'containers',
-    pounds: 'pounds',
-    tons: 'tons',
-    gallons: 'gallons',
-    cubic_feet: 'cubic_feet'
+  pieces: "pieces",
+  pallets: "pallets",
+  boxes: "boxes",
+  cartons: "cartons",
+  crates: "crates",
+  bundles: "bundles",
+  rolls: "rolls",
+  drums: "drums",
+  bags: "bags",
+  containers: "containers",
+  pounds: "pounds",
+  tons: "tons",
+  gallons: "gallons",
+  cubic_feet: "cubic_feet"
   }
 
   enum packaging_type: {
-    loose: 'loose',
-    wrapped: 'wrapped',
-    boxed: 'boxed',
-    palletized: 'palletized',
-    crated: 'crated',
-    shrink_wrapped: 'shrink_wrapped',
-    banded: 'banded',
-    custom_packaging: 'custom_packaging'
+  loose: "loose",
+  wrapped: "wrapped",
+  boxed: "boxed",
+  palletized: "palletized",
+  crated: "crated",
+  shrink_wrapped: "shrink_wrapped",
+  banded: "banded",
+  custom_packaging: "custom_packaging"
   }
 
   enum commodity_class: {
-    class_50: '50',
-    class_55: '55',
-    class_60: '60',
-    class_65: '65',
-    class_70: '70',
-    class_77_5: '77.5',
-    class_85: '85',
-    class_92_5: '92.5',
-    class_100: '100',
-    class_110: '110',
-    class_125: '125',
-    class_150: '150',
-    class_175: '175',
-    class_200: '200',
-    class_250: '250',
-    class_300: '300',
-    class_400: '400',
-    class_500: '500'
+  class_50: "50",
+  class_55: "55",
+  class_60: "60",
+  class_65: "65",
+  class_70: "70",
+  class_77_5: "77.5",
+  class_85: "85",
+  class_92_5: "92.5",
+  class_100: "100",
+  class_110: "110",
+  class_125: "125",
+  class_150: "150",
+  class_175: "175",
+  class_200: "200",
+  class_250: "250",
+  class_300: "300",
+  class_400: "400",
+  class_500: "500"
   }
 
   # Callbacks

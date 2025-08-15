@@ -39,35 +39,35 @@ class Location < ApplicationRecord
 
   # Enums
   enum location_type: {
-    warehouse: 'warehouse',
-    distribution_center: 'distribution_center',
-    manufacturing_plant: 'manufacturing_plant',
-    port: 'port',
-    rail_yard: 'rail_yard',
-    truck_stop: 'truck_stop',
-    customer_site: 'customer_site',
-    drop_yard: 'drop_yard',
-    cross_dock: 'cross_dock',
-    retail_store: 'retail_store',
-    construction_site: 'construction_site',
-    other: 'other'
+  warehouse: "warehouse",
+  distribution_center: "distribution_center",
+  manufacturing_plant: "manufacturing_plant",
+  port: "port",
+  rail_yard: "rail_yard",
+  truck_stop: "truck_stop",
+  customer_site: "customer_site",
+  drop_yard: "drop_yard",
+  cross_dock: "cross_dock",
+  retail_store: "retail_store",
+  construction_site: "construction_site",
+  other: "other"
   }
 
   enum facility_type: {
-    indoor: 'indoor',
-    outdoor: 'outdoor',
-    covered: 'covered',
-    climate_controlled: 'climate_controlled',
-    refrigerated: 'refrigerated',
-    hazmat_approved: 'hazmat_approved'
+  indoor: "indoor",
+  outdoor: "outdoor",
+  covered: "covered",
+  climate_controlled: "climate_controlled",
+  refrigerated: "refrigerated",
+  hazmat_approved: "hazmat_approved"
   }
 
   enum dock_type: {
-    ground_level: 'ground_level',
-    dock_high: 'dock_high',
-    rail_dock: 'rail_dock',
-    ramp: 'ramp',
-    no_dock: 'no_dock'
+  ground_level: "ground_level",
+  dock_high: "dock_high",
+  rail_dock: "rail_dock",
+  ramp: "ramp",
+  no_dock: "no_dock"
   }
 
   # Scopes

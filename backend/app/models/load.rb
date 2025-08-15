@@ -97,35 +97,35 @@ class Load < ApplicationRecord
 
   # Enums
   enum load_type: {
-    full_truckload: 'full_truckload',
-    less_than_truckload: 'less_than_truckload',
-    partial: 'partial',
-    intermodal: 'intermodal'
+  full_truckload: "full_truckload",
+  less_than_truckload: "less_than_truckload",
+  partial: "partial",
+  intermodal: "intermodal"
   }
 
   enum equipment_type: {
-    dry_van: 'dry_van',
-    refrigerated: 'refrigerated',
-    flatbed: 'flatbed',
-    step_deck: 'step_deck',
-    lowboy: 'lowboy',
-    tanker: 'tanker',
-    container: 'container',
-    car_carrier: 'car_carrier',
-    specialized: 'specialized'
+  dry_van: "dry_van",
+  refrigerated: "refrigerated",
+  flatbed: "flatbed",
+  step_deck: "step_deck",
+  lowboy: "lowboy",
+  tanker: "tanker",
+  container: "container",
+  car_carrier: "car_carrier",
+  specialized: "specialized"
   }
 
   enum rate_type: {
-    flat: 'flat',
-    per_mile: 'per_mile',
-    per_pound: 'per_pound',
-    hourly: 'hourly'
+  flat: "flat",
+  per_mile: "per_mile",
+  per_pound: "per_pound",
+  hourly: "hourly"
   }
 
   enum currency: {
-    USD: 'USD',
-    CAD: 'CAD',
-    MXN: 'MXN'
+  USD: "USD",
+  CAD: "CAD",
+  MXN: "MXN"
   }
 
   # State Machine

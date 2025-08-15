@@ -21,16 +21,16 @@ class LoadRequirement < ApplicationRecord
 
   # Enums
   enum requirement_type: {
-    equipment_certification: 'equipment_certification',
-    driver_certification: 'driver_certification',
-    cargo_handling: 'cargo_handling',
-    special_equipment: 'special_equipment',
-    documentation: 'documentation',
-    security_clearance: 'security_clearance',
-    temperature_control: 'temperature_control',
-    weight_capacity: 'weight_capacity',
-    insurance_coverage: 'insurance_coverage',
-    custom: 'custom'
+  equipment_certification: "equipment_certification",
+  driver_certification: "driver_certification",
+  cargo_handling: "cargo_handling",
+  special_equipment: "special_equipment",
+  documentation: "documentation",
+  security_clearance: "security_clearance",
+  temperature_control: "temperature_control",
+  weight_capacity: "weight_capacity",
+  insurance_coverage: "insurance_coverage",
+  custom: "custom"
   }
 
   # Scopes

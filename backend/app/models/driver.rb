@@ -58,19 +58,19 @@ class Driver < ApplicationRecord
 
   # Enums
   enum status: {
-    available: 'available',
-    assigned: 'assigned',
-    driving: 'driving',
-    off_duty: 'off_duty',
-    on_break: 'on_break',
-    inactive: 'inactive',
-    terminated: 'terminated'
+  available: "available",
+  assigned: "assigned",
+  driving: "driving",
+  off_duty: "off_duty",
+  on_break: "on_break",
+  inactive: "inactive",
+  terminated: "terminated"
   }
 
   enum cdl_class: {
-    A: 'A',
-    B: 'B',
-    C: 'C'
+  A: "A",
+  B: "B",
+  C: "C"
   }
 
   # Scopes

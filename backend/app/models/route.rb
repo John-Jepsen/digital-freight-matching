@@ -39,19 +39,19 @@ class Route < ApplicationRecord
 
   # Enums
   enum optimization_type: {
-    fastest: 'fastest',
-    shortest: 'shortest',
-    most_fuel_efficient: 'most_fuel_efficient',
-    avoid_traffic: 'avoid_traffic',
-    truck_optimized: 'truck_optimized'
+  fastest: "fastest",
+  shortest: "shortest",
+  most_fuel_efficient: "most_fuel_efficient",
+  avoid_traffic: "avoid_traffic",
+  truck_optimized: "truck_optimized"
   }
 
   enum traffic_conditions: {
-    light: 'light',
-    moderate: 'moderate',
-    heavy: 'heavy',
-    severe: 'severe',
-    unknown: 'unknown'
+  light: "light",
+  moderate: "moderate",
+  heavy: "heavy",
+  severe: "severe",
+  unknown: "unknown"
   }
 
   # Scopes

@@ -53,16 +53,16 @@ class Shipper < ApplicationRecord
 
   # Enums
   enum industry: {
-    manufacturing: 'manufacturing',
-    retail: 'retail',
-    agriculture: 'agriculture',
-    automotive: 'automotive',
-    construction: 'construction',
-    food_beverage: 'food_beverage',
-    chemicals: 'chemicals',
-    textiles: 'textiles',
-    electronics: 'electronics',
-    other: 'other'
+  manufacturing: "manufacturing",
+  retail: "retail",
+  agriculture: "agriculture",
+  automotive: "automotive",
+  construction: "construction",
+  food_beverage: "food_beverage",
+  chemicals: "chemicals",
+  textiles: "textiles",
+  electronics: "electronics",
+  other: "other"
   }
 
   # Scopes

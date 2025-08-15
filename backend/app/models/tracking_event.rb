@@ -37,48 +37,48 @@ class TrackingEvent < ApplicationRecord
 
   # Enums
   enum event_type: {
-    pickup_scheduled: 'pickup_scheduled',
-    pickup_arrived: 'pickup_arrived',
-    pickup_started: 'pickup_started',
-    pickup_completed: 'pickup_completed',
-    in_transit: 'in_transit',
-    delivery_scheduled: 'delivery_scheduled',
-    delivery_arrived: 'delivery_arrived',
-    delivery_started: 'delivery_started',
-    delivery_completed: 'delivery_completed',
-    delay: 'delay',
-    breakdown: 'breakdown',
-    accident: 'accident',
-    fuel_stop: 'fuel_stop',
-    rest_break: 'rest_break',
-    border_crossing: 'border_crossing',
-    inspection: 'inspection',
-    temperature_alert: 'temperature_alert',
-    security_alert: 'security_alert',
-    location_update: 'location_update',
-    status_change: 'status_change',
-    exception: 'exception'
+  pickup_scheduled: "pickup_scheduled",
+  pickup_arrived: "pickup_arrived",
+  pickup_started: "pickup_started",
+  pickup_completed: "pickup_completed",
+  in_transit: "in_transit",
+  delivery_scheduled: "delivery_scheduled",
+  delivery_arrived: "delivery_arrived",
+  delivery_started: "delivery_started",
+  delivery_completed: "delivery_completed",
+  delay: "delay",
+  breakdown: "breakdown",
+  accident: "accident",
+  fuel_stop: "fuel_stop",
+  rest_break: "rest_break",
+  border_crossing: "border_crossing",
+  inspection: "inspection",
+  temperature_alert: "temperature_alert",
+  security_alert: "security_alert",
+  location_update: "location_update",
+  status_change: "status_change",
+  exception: "exception"
   }
 
   enum status: {
-    scheduled: 'scheduled',
-    in_progress: 'in_progress',
-    completed: 'completed',
-    delayed: 'delayed',
-    cancelled: 'cancelled',
-    exception: 'exception',
-    on_hold: 'on_hold'
+  scheduled: "scheduled",
+  in_progress: "in_progress",
+  completed: "completed",
+  delayed: "delayed",
+  cancelled: "cancelled",
+  exception: "exception",
+  on_hold: "on_hold"
   }
 
   enum source: {
-    manual: 'manual',
-    gps: 'gps',
-    eld: 'eld',          # Electronic Logging Device
-    api: 'api',
-    mobile_app: 'mobile_app',
-    telematics: 'telematics',
-    driver_input: 'driver_input',
-    automated: 'automated'
+  manual: "manual",
+  gps: "gps",
+  eld: "eld",          # Electronic Logging Device
+  api: "api",
+  mobile_app: "mobile_app",
+  telematics: "telematics",
+  driver_input: "driver_input",
+  automated: "automated"
   }
 
   # Scopes

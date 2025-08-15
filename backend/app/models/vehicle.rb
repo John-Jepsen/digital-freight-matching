@@ -55,30 +55,30 @@ class Vehicle < ApplicationRecord
 
   # Enums
   enum equipment_type: {
-    dry_van: 'dry_van',
-    refrigerated: 'refrigerated',
-    flatbed: 'flatbed',
-    step_deck: 'step_deck',
-    lowboy: 'lowboy',
-    tanker: 'tanker',
-    container: 'container',
-    car_carrier: 'car_carrier',
-    specialized: 'specialized'
+  dry_van: "dry_van",
+  refrigerated: "refrigerated",
+  flatbed: "flatbed",
+  step_deck: "step_deck",
+  lowboy: "lowboy",
+  tanker: "tanker",
+  container: "container",
+  car_carrier: "car_carrier",
+  specialized: "specialized"
   }
 
   enum status: {
-    active: 'active',
-    inactive: 'inactive',
-    maintenance: 'maintenance',
-    out_of_service: 'out_of_service'
+  active: "active",
+  inactive: "inactive",
+  maintenance: "maintenance",
+  out_of_service: "out_of_service"
   }
 
   enum fuel_type: {
-    diesel: 'diesel',
-    gasoline: 'gasoline',
-    electric: 'electric',
-    hybrid: 'hybrid',
-    natural_gas: 'natural_gas'
+  diesel: "diesel",
+  gasoline: "gasoline",
+  electric: "electric",
+  hybrid: "hybrid",
+  natural_gas: "natural_gas"
   }
 
   # Scopes
