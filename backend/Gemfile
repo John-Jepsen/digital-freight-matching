@@ -43,7 +43,7 @@ group :development, :test do
 end
 
 group :development do
-  gem "annotate", "~> 3.2"            # Model annotations
+  # gem "annotate", "~> 3.2"            # Model annotations - temporarily disabled for Rails 8 compatibility
 end
 
 group :test do
@@ -51,4 +51,6 @@ group :test do
   gem "database_cleaner-active_record", "~> 2.1"
   gem "webmock", "~> 3.19"
   gem "vcr", "~> 6.2"
+  gem "capybara", "~> 3.39"            # E2E testing
+  gem "selenium-webdriver", "~> 4.15"  # Browser automation
 end
