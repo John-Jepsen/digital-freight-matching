@@ -17,6 +17,13 @@ log/*
 tmp/*
 !tmp/.keep
 
+# Backend cache and temp files
+backend/tmp/
+backend/tmp/cache/
+backend/tmp/cache/bootsnap-*
+backend/tmp/cache-iseq/
+backend/tmp/cache-yaml/
+
 # Node modules
 node_modules/
 npm-debug.log*
