@@ -35,6 +35,20 @@ class Shipper < ApplicationRecord
   has_many :shipper_carrier_relationships, dependent: :destroy
   has_many :preferred_carriers, through: :shipper_carrier_relationships, source: :carrier
 
+  # Enums
+  enum industry: {
+    manufacturing: "manufacturing",
+    retail: "retail",
+    agriculture: "agriculture",
+    automotive: "automotive",
+    construction: "construction",
+    food_beverage: "food_beverage",
+    chemicals: "chemicals",
+    textiles: "textiles",
+    electronics: "electronics",
+    other: "other"
+  }
+
   # Validations
   validates :company_name, presence: true, length: { minimum: 2, maximum: 100 }
   validates :industry, presence: true
@@ -53,16 +67,16 @@ class Shipper < ApplicationRecord
 
   # Enums
   enum industry: {
-  manufacturing: "manufacturing",
-  retail: "retail",
-  agriculture: "agriculture",
-  automotive: "automotive",
-  construction: "construction",
-  food_beverage: "food_beverage",
-  chemicals: "chemicals",
-  textiles: "textiles",
-  electronics: "electronics",
-  other: "other"
+    manufacturing: "manufacturing",
+    retail: "retail",
+    agriculture: "agriculture",
+    automotive: "automotive",
+    construction: "construction",
+    food_beverage: "food_beverage",
+    chemicals: "chemicals",
+    textiles: "textiles",
+    electronics: "electronics",
+    other: "other"
   }
 
   # Scopes

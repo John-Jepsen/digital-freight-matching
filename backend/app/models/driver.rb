@@ -57,7 +57,7 @@ class Driver < ApplicationRecord
   validate :termination_date_after_hire_date
 
   # Enums
-  enum status: {
+  enum :status, {
   available: "available",
   assigned: "assigned",
   driving: "driving",
@@ -67,7 +67,7 @@ class Driver < ApplicationRecord
   terminated: "terminated"
   }
 
-  enum cdl_class: {
+  enum :cdl_class, {
   A: "A",
   B: "B",
   C: "C"

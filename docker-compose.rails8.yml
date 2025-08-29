@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Rails 8.0 API with our newly built image
+  freight_api:
+    image: freight-backend-rails8:latest
+    container_name: freight_rails8_api
+    ports:
+      - "3000:80"
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgresql://freight_user:freight_pass_changeme@postgres:5432/freight_matching
+      REDIS_URL: redis://redis:6379/0
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-placeholder_key}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - freight_network
+
+  # Database Services
+  postgres:
+    image: postgres:14-alpine
+    container_name: freight_postgres
+    environment:
+      POSTGRES_DB: freight_matching
+      POSTGRES_USER: freight_user
+      POSTGRES_PASSWORD: freight_pass_changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - freight_network
+
+  # Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: freight_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - freight_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  freight_network:
+    driver: bridge

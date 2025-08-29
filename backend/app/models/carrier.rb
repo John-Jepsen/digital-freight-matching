@@ -61,14 +61,14 @@ class Carrier < ApplicationRecord
   after_validation :geocode, if: :address_changed?
 
   # Enums
-  enum safety_rating: {
+  enum :safety_rating, {
   satisfactory: "satisfactory",
   conditional: "conditional",
   unsatisfactory: "unsatisfactory",
   not_rated: "not_rated"
   }
 
-  enum operating_authority: {
+  enum :operating_authority, {
   interstate: "interstate",
   intrastate: "intrastate",
   both: "both"

@@ -134,7 +134,7 @@ class Api::V1::AuthController < ApplicationController
       exp: 24.hours.from_now.to_i
     }
     
-    JWT.encode(payload, Rails.application.secrets.secret_key_base)
+    JWT.encode(payload, Rails.application.secret_key_base)
   end
 
   def user_response(user)

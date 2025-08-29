@@ -96,14 +96,14 @@ class Load < ApplicationRecord
   geocoded_by :delivery_full_address, latitude: :delivery_latitude, longitude: :delivery_longitude
 
   # Enums
-  enum load_type: {
+  enum :load_type, {
   full_truckload: "full_truckload",
   less_than_truckload: "less_than_truckload",
   partial: "partial",
   intermodal: "intermodal"
   }
 
-  enum equipment_type: {
+  enum :equipment_type, {
   dry_van: "dry_van",
   refrigerated: "refrigerated",
   flatbed: "flatbed",
@@ -115,14 +115,14 @@ class Load < ApplicationRecord
   specialized: "specialized"
   }
 
-  enum rate_type: {
+  enum :rate_type, {
   flat: "flat",
   per_mile: "per_mile",
   per_pound: "per_pound",
   hourly: "hourly"
   }
 
-  enum currency: {
+  enum :currency, {
   USD: "USD",
   CAD: "CAD",
   MXN: "MXN"

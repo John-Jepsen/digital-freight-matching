@@ -31,18 +31,18 @@ class User < ApplicationRecord
 
   # Enums
   enum user_type: {
-  shipper: "shipper",
-  carrier: "carrier",
-  driver: "driver",
-  broker: "broker",
-  admin: "admin"
+    shipper: "shipper",
+    carrier: "carrier",
+    driver: "driver",
+    broker: "broker",
+    admin: "admin"
   }
 
   enum status: {
-  active: "active",
-  inactive: "inactive",
-  suspended: "suspended",
-  pending: "pending"
+    active: "active",
+    inactive: "inactive",
+    suspended: "suspended",
+    pending: "pending"
   }
 
   # Validations

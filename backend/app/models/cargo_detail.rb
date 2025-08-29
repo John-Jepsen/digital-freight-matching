@@ -35,7 +35,7 @@ class CargoDetail < ApplicationRecord
   validate :weight_consistency
 
   # Enums
-  enum unit_type: {
+  enum :unit_type, {
   pieces: "pieces",
   pallets: "pallets",
   boxes: "boxes",
@@ -52,7 +52,7 @@ class CargoDetail < ApplicationRecord
   cubic_feet: "cubic_feet"
   }
 
-  enum packaging_type: {
+  enum :packaging_type, {
   loose: "loose",
   wrapped: "wrapped",
   boxed: "boxed",
@@ -63,7 +63,7 @@ class CargoDetail < ApplicationRecord
   custom_packaging: "custom_packaging"
   }
 
-  enum commodity_class: {
+  enum :commodity_class, {
   class_50: "50",
   class_55: "55",
   class_60: "60",

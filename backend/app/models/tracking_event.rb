@@ -36,7 +36,7 @@ class TrackingEvent < ApplicationRecord
   validates :temperature, :humidity, numericality: true, allow_blank: true
 
   # Enums
-  enum event_type: {
+  enum :event_type, {
   pickup_scheduled: "pickup_scheduled",
   pickup_arrived: "pickup_arrived",
   pickup_started: "pickup_started",
@@ -60,7 +60,7 @@ class TrackingEvent < ApplicationRecord
   exception: "exception"
   }
 
-  enum status: {
+  enum :status, {
   scheduled: "scheduled",
   in_progress: "in_progress",
   completed: "completed",
@@ -70,7 +70,7 @@ class TrackingEvent < ApplicationRecord
   on_hold: "on_hold"
   }
 
-  enum source: {
+  enum :source, {
   manual: "manual",
   gps: "gps",
   eld: "eld",          # Electronic Logging Device

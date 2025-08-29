@@ -54,7 +54,7 @@ class Vehicle < ApplicationRecord
   validates :equipment_type, presence: true
 
   # Enums
-  enum equipment_type: {
+  enum :equipment_type, {
   dry_van: "dry_van",
   refrigerated: "refrigerated",
   flatbed: "flatbed",
@@ -66,14 +66,14 @@ class Vehicle < ApplicationRecord
   specialized: "specialized"
   }
 
-  enum status: {
+  enum :status, {
   active: "active",
   inactive: "inactive",
   maintenance: "maintenance",
   out_of_service: "out_of_service"
   }
 
-  enum fuel_type: {
+  enum :fuel_type, {
   diesel: "diesel",
   gasoline: "gasoline",
   electric: "electric",

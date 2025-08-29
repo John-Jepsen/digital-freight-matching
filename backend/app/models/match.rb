@@ -42,7 +42,7 @@ class Match < ApplicationRecord
   validate :unique_active_match_per_load
 
   # Enums
-  enum status: {
+  enum :status, {
   pending: "pending",
   offered: "offered",
   accepted: "accepted",
@@ -51,7 +51,7 @@ class Match < ApplicationRecord
   cancelled: "cancelled"
   }
 
-  enum rejection_reason: {
+  enum :rejection_reason, {
   rate_too_low: "rate_too_low",
   timing_conflict: "timing_conflict",
   equipment_unavailable: "equipment_unavailable",

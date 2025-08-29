@@ -38,7 +38,7 @@ class Location < ApplicationRecord
   geocoded_by :full_address, latitude: :latitude, longitude: :longitude
 
   # Enums
-  enum location_type: {
+  enum :location_type, {
   warehouse: "warehouse",
   distribution_center: "distribution_center",
   manufacturing_plant: "manufacturing_plant",
@@ -53,7 +53,7 @@ class Location < ApplicationRecord
   other: "other"
   }
 
-  enum facility_type: {
+  enum :facility_type, {
   indoor: "indoor",
   outdoor: "outdoor",
   covered: "covered",
@@ -62,7 +62,7 @@ class Location < ApplicationRecord
   hazmat_approved: "hazmat_approved"
   }
 
-  enum dock_type: {
+  enum :dock_type, {
   ground_level: "ground_level",
   dock_high: "dock_high",
   rail_dock: "rail_dock",

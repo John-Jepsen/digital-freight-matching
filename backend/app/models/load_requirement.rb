@@ -20,7 +20,7 @@ class LoadRequirement < ApplicationRecord
   validates :requirement_value, presence: true
 
   # Enums
-  enum requirement_type: {
+  enum :requirement_type, {
   equipment_certification: "equipment_certification",
   driver_certification: "driver_certification",
   cargo_handling: "cargo_handling",

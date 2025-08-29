@@ -38,7 +38,7 @@ class Route < ApplicationRecord
   validates :estimated_duration, numericality: { greater_than: 0 }, allow_blank: true
 
   # Enums
-  enum optimization_type: {
+  enum :optimization_type, {
   fastest: "fastest",
   shortest: "shortest",
   most_fuel_efficient: "most_fuel_efficient",
@@ -46,7 +46,7 @@ class Route < ApplicationRecord
   truck_optimized: "truck_optimized"
   }
 
-  enum traffic_conditions: {
+  enum :traffic_conditions, {
   light: "light",
   moderate: "moderate",
   heavy: "heavy",
