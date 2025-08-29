@@ -123,7 +123,7 @@ class Driver < ApplicationRecord
   end
 
   def is_available?
-    available? && !license_expired? && !medical_cert_expired? && vehicle.nil?
+    available? && !license_expired? && !medical_cert_expired? && vehicle_id.nil?
   end
 
   def is_assigned?

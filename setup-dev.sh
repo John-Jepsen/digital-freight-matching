@@ -26,7 +26,7 @@ create_env_file() {
         echo "📝 Creating environment file..."
         cat > .env << EOF
 # Database Configuration
-DATABASE_URL=postgresql://freight_user:freight_pass@localhost:5432/freight_matching
+DATABASE_URL=postgresql://freight_user:freight_pass_changeme@localhost:5432/freight_matching
 REDIS_URL=redis://localhost:6379
 
 # External APIs
@@ -301,7 +301,7 @@ spring:
   datasource:
     url: \${DATABASE_URL:jdbc:postgresql://localhost:5432/freight_matching}
     username: freight_user
-    password: freight_pass
+    password: freight_pass_changeme
     driver-class-name: org.postgresql.Driver
   
   jpa:
