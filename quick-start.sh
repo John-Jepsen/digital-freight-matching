@@ -16,6 +16,12 @@ if ! command -v docker > /dev/null; then
     exit 1
 fi
 
+# Check if Docker Compose is available
+if ! docker compose version > /dev/null 2>&1 && ! command -v docker-compose > /dev/null; then
+    echo "❌ Docker Compose is not available. Please install Docker Compose first."
+    exit 1
+fi
+
 echo "✅ Docker is available"
 
 # Copy environment file if it doesn't exist
