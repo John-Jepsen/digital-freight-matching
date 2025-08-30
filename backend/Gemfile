@@ -32,6 +32,7 @@ gem "net-smtp"                        # Email (Rails 7+ requirement)
 gem "rack-cors"                       # CORS handling
 gem "rack-attack", "~> 6.7"          # Rate limiting
 gem "jbuilder"                        # JSON APIs
+gem 'prometheus-client'
 
 # Development & Utilities
 gem "bcrypt", "~> 3.1.7"              # Password hashing
