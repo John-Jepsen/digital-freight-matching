@@ -178,6 +178,30 @@ class Load < ApplicationRecord
   scope :expedited, -> { where(is_expedited: true) }
   scope :hazmat, -> { where(is_hazmat: true) }
   scope :temperature_controlled, -> { where(temperature_controlled: true) }
+  
+  # Performance-optimized scopes using composite indexes
+  scope :search_by_equipment_and_location, ->(equipment, pickup_state, delivery_state = nil) {
+    scope = where(status: 'posted', equipment_type: equipment, pickup_state: pickup_state)
+    scope = scope.where(delivery_state: delivery_state) if delivery_state
+    scope
+  }
+  
+  scope :available_with_requirements, ->(equipment_type, pickup_state) {
+    where(status: 'posted', equipment_type: equipment_type, pickup_state: pickup_state)
+      .where('expires_at > ?', Time.current)
+  }
+  
+  # Geographic search using database functions for better performance
+  scope :near_pickup_location, ->(lat, lng, radius_miles = 100) {
+    where(
+      "3959 * acos(
+        cos(radians(?)) * cos(radians(pickup_latitude)) * 
+        cos(radians(pickup_longitude) - radians(?)) + 
+        sin(radians(?)) * sin(radians(pickup_latitude))
+      ) <= ?",
+      lat, lng, lat, radius_miles
+    ).where.not(pickup_latitude: nil, pickup_longitude: nil)
+  }
 
   # Callbacks
   before_validation :generate_reference_number, on: :create

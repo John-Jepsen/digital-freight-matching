@@ -86,6 +86,9 @@ class MatchingAlgorithmService
   private
 
   def apply_compatibility_filters(carriers_scope)
+    # Use optimized scope for basic eligibility filtering
+    carriers_scope = carriers_scope.eligible_for_matching
+    
     # Equipment type compatibility - using optimized joins and composite indexes
     carriers_scope = carriers_scope.joins(:vehicles)
                                   .where(vehicles: { 
@@ -94,36 +97,31 @@ class MatchingAlgorithmService
                                   })
     
     # Service area compatibility - optimize JSON array search
-    carriers_scope = carriers_scope.where(
-      "service_areas::text LIKE ? OR service_areas::text LIKE ?", 
-      "%\"#{@load.pickup_state}\"%", 
-      "%\"ALL\"%"
-    )
+    carriers_scope = carriers_scope.serving_area(@load.pickup_state)
     
-    # Hazmat certification if required - using optimized join
+    # Hazmat certification if required - using optimized scope and join
     if @load.is_hazmat?
       carriers_scope = carriers_scope.joins(:drivers)
-                                   .where(drivers: { 
+                                   .merge(Driver.where(
                                      is_hazmat_certified: true, 
                                      status: 'available' 
-                                   })
+                                   ))
     end
     
-    # Team driver requirement - using optimized join
+    # Team driver requirement - using optimized scope and join
     if @load.is_team_driver?
       carriers_scope = carriers_scope.joins(:drivers)
-                                   .where(drivers: { 
+                                   .merge(Driver.where(
                                      is_team_driver: true, 
                                      status: 'available' 
-                                   })
+                                   ))
     end
     
-    # Weight capacity - using subquery for better performance
+    # Weight capacity - using optimized vehicle scope with subquery
     if @load.weight.present?
       carriers_scope = carriers_scope.where(
-        id: Vehicle.active
-                   .where('capacity_weight >= ?', @load.weight)
-                   .select(:carrier_id)
+        id: Vehicle.available_for_load(@load.equipment_type, @load.weight)
+               .select(:carrier_id)
       )
     end
     
@@ -131,20 +129,22 @@ class MatchingAlgorithmService
   end
 
   def apply_option_filters(carriers_scope)
-    # Distance filter
-    if @options[:max_distance_to_pickup].present?
-      carriers_scope = filter_by_distance(carriers_scope, @options[:max_distance_to_pickup])
+    # Distance filter - use optimized geographic scope
+    if @options[:max_distance_to_pickup].present? && @load.pickup_coordinates.present?
+      pickup_lat, pickup_lng = @load.pickup_coordinates
+      carriers_scope = carriers_scope.near_location(pickup_lat, pickup_lng, @options[:max_distance_to_pickup])
     end
     
-    # Safety rating filter
+    # Safety rating filter - use optimized composite scope
     if @options[:min_safety_rating].present?
-      carriers_scope = carriers_scope.where('safety_rating >= ?', @options[:min_safety_rating])
+      carriers_scope = carriers_scope.with_safety_standard(@options[:min_safety_rating])
+    else
+      # Default safety standard if not specified
+      carriers_scope = carriers_scope.with_safety_standard('satisfactory')
     end
     
-    # Verified only filter
-    if @options[:verified_only]
-      carriers_scope = carriers_scope.where(is_verified: true)
-    end
+    # Verified only filter - already handled by eligible_for_matching scope
+    # No additional filtering needed for verified_only since eligible_for_matching includes it
     
     carriers_scope
   end

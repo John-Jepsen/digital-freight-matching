@@ -117,18 +117,31 @@ class LoadSearchService
   end
 
   def apply_search_filters(loads_scope)
-    # Equipment type filter
+    # Equipment type filter - use optimized scope if combined with location
     if @filters[:equipment_type].present?
-      loads_scope = loads_scope.where(equipment_type: @filters[:equipment_type])
+      if @filters[:origin_state].present?
+        # Use composite index: status + equipment_type + pickup_state
+        loads_scope = Load.search_by_equipment_and_location(
+          @filters[:equipment_type], 
+          @filters[:origin_state],
+          @filters[:destination_state]
+        )
+        # Override the previous scope since we're using the optimized one
+        loads_scope = loads_scope.available.includes(:shipper, :cargo_details, :load_requirements)
+      else
+        loads_scope = loads_scope.where(equipment_type: @filters[:equipment_type])
+      end
     end
     
-    # Origin/destination filters
-    if @filters[:origin_state].present?
-      loads_scope = loads_scope.where(pickup_state: @filters[:origin_state])
-    end
-    
-    if @filters[:destination_state].present?
-      loads_scope = loads_scope.where(delivery_state: @filters[:destination_state])
+    # Origin/destination filters (only if not already handled above)
+    unless @filters[:equipment_type].present? && @filters[:origin_state].present?
+      if @filters[:origin_state].present?
+        loads_scope = loads_scope.where(pickup_state: @filters[:origin_state])
+      end
+      
+      if @filters[:destination_state].present?
+        loads_scope = loads_scope.where(delivery_state: @filters[:destination_state])
+      end
     end
     
     # Date range filters
@@ -149,9 +162,10 @@ class LoadSearchService
       loads_scope = loads_scope.where('total_rate <= ?', @filters[:max_rate])
     end
     
-    # Distance filter
+    # Distance filter - use optimized geographic scope
     if @filters[:max_distance].present? && @carrier&.current_location.present?
-      loads_scope = filter_by_distance(loads_scope, @filters[:max_distance].to_i)
+      carrier_lat, carrier_lng = @carrier.current_location
+      loads_scope = loads_scope.near_pickup_location(carrier_lat, carrier_lng, @filters[:max_distance].to_i)
     end
     
     # Special requirements
