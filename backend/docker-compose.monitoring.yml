@@ -1,4 +1,3 @@
-version: '3.7'
 
 services:
   prometheus:
@@ -7,6 +6,8 @@ services:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - freight_network
 
   grafana:
     image: grafana/grafana
@@ -15,3 +16,9 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=secret
+    networks:
+      - freight_network
+
+networks:
+  freight_network:
+    external: true

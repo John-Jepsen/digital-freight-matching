@@ -9,17 +9,18 @@ module Monitorable
 
   private
 
-  def track_request_metrics
-    start = Time.now
-    yield
-    duration = Time.now - start
-    RESPONSE_TIME.observe({}, duration)
-    REQUEST_COUNTER.increment
-  end
+def track_request_metrics
+  start = Time.now
+  yield
+  duration = Time.now - start
+  RESPONSE_TIME.observe({ method: request.method, path: request.path }, duration)
+  REQUEST_COUNTER.increment
+end
 
-  def track_error(exception)
-    ERROR_COUNTER.increment
-    Rails.logger.error("Error tracked: #{exception.message}")
-    raise exception
-  end
+def track_error(exception)
+  ERROR_COUNTER.increment
+  Rails.logger.error("❌ Error tracked: #{exception.message}")
+  raise exception
+end
+
 end
