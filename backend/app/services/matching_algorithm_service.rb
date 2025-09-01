@@ -5,31 +5,49 @@ class MatchingAlgorithmService
     @load = load
     @options = options
     @errors = []
+    @performance_monitor = DatabasePerformanceMonitorService.instance
   end
 
   def find_eligible_carriers
-    begin
-      # Get all active carriers
-      carriers_scope = Carrier.active.verified
-      
-      # Apply basic compatibility filters
-      carriers_scope = apply_compatibility_filters(carriers_scope)
-      
-      # Apply optional filters from options
-      carriers_scope = apply_option_filters(carriers_scope)
-      
-      # Calculate match scores and sort
-      carriers_with_scores = calculate_carrier_scores(carriers_scope)
-      
-      # Apply limits
-      limit = @options[:limit] || 10
-      top_carriers = carriers_with_scores.first(limit)
-      
-      success_response(top_carriers)
-    rescue StandardError => e
-      Rails.logger.error "Carrier matching failed: #{e.message}"
-      @errors = ["Matching failed: #{e.message}"]
-      error_response
+    DatabasePerformanceMonitorService.monitor_performance('carrier_matching') do
+      begin
+        # Performance monitoring
+        start_time = Time.current
+        
+        # Get all active carriers with preloaded associations to avoid N+1
+        carriers_scope = Carrier.active.verified.includes(
+          :user,
+          vehicles: [:driver],
+          drivers: [],
+          matches: [:load]
+        )
+        
+        # Apply basic compatibility filters
+        carriers_scope = apply_compatibility_filters(carriers_scope)
+        
+        # Apply optional filters from options
+        carriers_scope = apply_option_filters(carriers_scope)
+        
+        # Monitor the final query execution
+        carriers_result = DatabasePerformanceMonitorService.monitor_query('carrier_matching_final', carriers_scope)
+        
+        # Calculate match scores and sort
+        carriers_with_scores = calculate_carrier_scores(carriers_result)
+        
+        # Apply limits
+        limit = @options[:limit] || 10
+        top_carriers = carriers_with_scores.first(limit)
+        
+        # Log execution time
+        execution_time = (Time.current - start_time) * 1000
+        @performance_monitor.log_query('carrier_matching_total', execution_time)
+        
+        success_response(top_carriers, execution_time)
+      rescue StandardError => e
+        Rails.logger.error "Carrier matching failed: #{e.message}"
+        @errors = ["Matching failed: #{e.message}"]
+        error_response
+      end
     end
   end
 
@@ -68,33 +86,45 @@ class MatchingAlgorithmService
   private
 
   def apply_compatibility_filters(carriers_scope)
-    # Equipment type compatibility
+    # Equipment type compatibility - using optimized joins and composite indexes
     carriers_scope = carriers_scope.joins(:vehicles)
-                                  .where(vehicles: { equipment_type: @load.equipment_type, is_active: true })
+                                  .where(vehicles: { 
+                                    equipment_type: @load.equipment_type, 
+                                    status: 'active' 
+                                  })
     
-    # Service area compatibility
+    # Service area compatibility - optimize JSON array search
     carriers_scope = carriers_scope.where(
-      "service_areas LIKE ? OR service_areas LIKE ?", 
-      "%#{@load.pickup_state}%", 
-      "%ALL%"
+      "service_areas::text LIKE ? OR service_areas::text LIKE ?", 
+      "%\"#{@load.pickup_state}\"%", 
+      "%\"ALL\"%"
     )
     
-    # Hazmat certification if required
+    # Hazmat certification if required - using optimized join
     if @load.is_hazmat?
       carriers_scope = carriers_scope.joins(:drivers)
-                                   .where(drivers: { is_hazmat_certified: true, is_active: true })
+                                   .where(drivers: { 
+                                     is_hazmat_certified: true, 
+                                     status: 'available' 
+                                   })
     end
     
-    # Team driver requirement
+    # Team driver requirement - using optimized join
     if @load.is_team_driver?
       carriers_scope = carriers_scope.joins(:drivers)
-                                   .where(drivers: { is_team_driver: true, is_active: true })
+                                   .where(drivers: { 
+                                     is_team_driver: true, 
+                                     status: 'available' 
+                                   })
     end
     
-    # Weight capacity
+    # Weight capacity - using subquery for better performance
     if @load.weight.present?
-      carriers_scope = carriers_scope.joins(:vehicles)
-                                   .where('vehicles.capacity_weight >= ?', @load.weight)
+      carriers_scope = carriers_scope.where(
+        id: Vehicle.active
+                   .where('capacity_weight >= ?', @load.weight)
+                   .select(:carrier_id)
+      )
     end
     
     carriers_scope.distinct
@@ -122,16 +152,18 @@ class MatchingAlgorithmService
   def filter_by_distance(carriers_scope, max_distance)
     return carriers_scope unless @load.pickup_coordinates.present?
     
-    # This is simplified - in production use PostGIS
-    carriers_scope.select do |carrier|
-      next false unless carrier.current_location.present?
-      
-      distance = Geocoder::Calculations.distance_between(
-        carrier.current_location,
-        @load.pickup_coordinates
-      )
-      distance <= max_distance
-    end
+    # Use database-level distance calculation for better performance
+    pickup_lat, pickup_lng = @load.pickup_coordinates
+    
+    # Use Haversine formula in SQL with spatial index
+    carriers_scope.where(
+      "3959 * acos(
+        cos(radians(?)) * cos(radians(latitude)) * 
+        cos(radians(longitude) - radians(?)) + 
+        sin(radians(?)) * sin(radians(latitude))
+      ) <= ?",
+      pickup_lat, pickup_lng, pickup_lat, max_distance
+    ).where.not(latitude: nil, longitude: nil)
   end
 
   def calculate_carrier_scores(carriers_scope)
@@ -162,28 +194,29 @@ class MatchingAlgorithmService
     factors = {}
     
     # Historical performance bonus
-    if carrier.on_time_percentage > 95
+    on_time_perc = carrier.on_time_percentage
+    if on_time_perc > 95
       bonus_points += 20
       factors[:on_time_bonus] = 20
-    elsif carrier.on_time_percentage > 90
+    elsif on_time_perc > 90
       bonus_points += 10
       factors[:on_time_bonus] = 10
     end
     
     # Rating bonus
-    if carrier.average_rating >= 4.5
+    avg_rating = carrier.average_rating
+    if avg_rating >= 4.5
       bonus_points += 15
       factors[:rating_bonus] = 15
-    elsif carrier.average_rating >= 4.0
+    elsif avg_rating >= 4.0
       bonus_points += 8
       factors[:rating_bonus] = 8
     end
     
-    # Previous successful loads with this shipper
+    # Previous successful loads with this shipper - optimized query
     previous_loads = carrier.matches
                            .joins(:load)
-                           .where(loads: { shipper_id: @load.shipper_id })
-                           .where(status: 'accepted')
+                           .where(loads: { shipper_id: @load.shipper_id }, status: 'accepted')
                            .count
     
     if previous_loads > 0
@@ -192,14 +225,16 @@ class MatchingAlgorithmService
       factors[:relationship_bonus] = relationship_bonus
     end
     
-    # Equipment specialization bonus
-    if carrier.equipment_list.count == 1 && carrier.equipment_list.first == @load.equipment_type
+    # Equipment specialization bonus - use preloaded data
+    equipment_list = carrier.equipment_list
+    if equipment_list.count == 1 && equipment_list.first == @load.equipment_type
       bonus_points += 10
       factors[:specialization_bonus] = 10
     end
     
     # Availability bonus (carriers with available capacity)
-    if carrier.available_capacity > 0
+    available_capacity = carrier.available_capacity
+    if available_capacity > 0
       bonus_points += 5
       factors[:availability_bonus] = 5
     end
@@ -352,8 +387,8 @@ class MatchingAlgorithmService
     [estimated_delivery, @load.delivery_date.beginning_of_day].max
   end
 
-  def success_response(carriers_data)
-    {
+  def success_response(carriers_data, execution_time = nil)
+    response = {
       success: true,
       carriers: carriers_data,
       total_found: carriers_data.count,
@@ -364,6 +399,19 @@ class MatchingAlgorithmService
         special_requirements: @load.special_requirements
       }
     }
+    
+    response[:execution_time_ms] = execution_time.round(2) if execution_time
+    response
+  end
+
+  def explain_carrier_query_performance(carriers_scope)
+    explain_result = ActiveRecord::Base.connection.execute(
+      "EXPLAIN ANALYZE #{carriers_scope.to_sql}"
+    )
+    Rails.logger.info "Carrier Matching Query Plan:"
+    explain_result.each { |row| Rails.logger.info row['QUERY PLAN'] }
+  rescue StandardError => e
+    Rails.logger.warn "Failed to analyze carrier query: #{e.message}"
   end
 
   def error_response
