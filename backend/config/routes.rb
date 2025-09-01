@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
+  
+  # Metrics endpoint for Prometheus scraping
+  get "metrics" => "metrics#index"
 
   # Defines the root path route ("/")
   root "application#health"
@@ -87,6 +90,9 @@ Rails.application.routes.draw do
         get :carrier_performance
         get :load_metrics
         get :route_efficiency
+        get :business_metrics
+        get :sla_dashboard
+        get :alerts_summary
       end
     end
   end

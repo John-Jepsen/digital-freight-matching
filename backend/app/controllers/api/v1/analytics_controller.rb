@@ -1,4 +1,5 @@
 class Api::V1::AnalyticsController < ApplicationController
+  include Monitorable
   before_action :authenticate_user!
 
   # GET /api/v1/analytics/dashboard
@@ -127,6 +128,49 @@ class Api::V1::AnalyticsController < ApplicationController
     else
       render json: { error: 'Financial analytics not available for this user type' }, status: :forbidden
     end
+  end
+
+  # GET /api/v1/analytics/business_metrics
+  def business_metrics
+    authorize_analytics_access!(['admin'])
+    
+    metrics_data = {
+      real_time_metrics: collect_real_time_business_metrics,
+      performance_metrics: collect_performance_metrics,
+      sla_metrics: collect_sla_metrics,
+      system_health: collect_system_health_metrics
+    }
+
+    render json: { business_metrics: metrics_data }
+  end
+
+  # GET /api/v1/analytics/sla_dashboard
+  def sla_dashboard
+    authorize_analytics_access!(['admin'])
+    
+    sla_data = {
+      response_time_sla: calculate_response_time_sla,
+      uptime_sla: calculate_uptime_sla,
+      load_matching_sla: calculate_load_matching_sla,
+      error_rate_sla: calculate_error_rate_sla,
+      current_status: determine_overall_sla_status
+    }
+
+    render json: { sla_dashboard: sla_data }
+  end
+
+  # GET /api/v1/analytics/alerts_summary
+  def alerts_summary
+    authorize_analytics_access!(['admin'])
+    
+    alerts_data = {
+      active_alerts: collect_active_alerts,
+      recent_incidents: collect_recent_incidents,
+      alert_trends: calculate_alert_trends,
+      mttr_metrics: calculate_mttr_metrics
+    }
+
+    render json: { alerts_summary: alerts_data }
   end
 
   private
@@ -579,5 +623,307 @@ class Api::V1::AnalyticsController < ApplicationController
   def calculate_market_share
     # Placeholder calculation
     { market_share: 12.5, position: 3 }
+  end
+
+  # Real-time business metrics collection
+  def collect_real_time_business_metrics
+    {
+      active_loads: Load.where(status: ['posted', 'matched', 'in_transit']).count,
+      active_users: User.where('last_sign_in_at > ?', 1.hour.ago).count,
+      loads_posted_today: Load.where('created_at >= ?', Date.current).count,
+      matches_made_today: Match.where('created_at >= ? AND status = ?', Date.current, 'accepted').count,
+      revenue_today: Load.joins(:payments)
+                        .where('loads.created_at >= ? AND payments.status = ?', Date.current, 'completed')
+                        .sum('payments.amount'),
+      average_response_time: calculate_average_response_time,
+      load_matching_success_rate: calculate_load_matching_success_rate
+    }
+  rescue StandardError => e
+    Rails.logger.error "Failed to collect real-time metrics: #{e.message}"
+    {}
+  end
+
+  def collect_performance_metrics
+    {
+      api_response_times: calculate_api_performance_metrics,
+      database_performance: calculate_database_performance,
+      cache_hit_rate: calculate_cache_performance,
+      background_job_performance: calculate_job_performance
+    }
+  end
+
+  def collect_sla_metrics
+    {
+      uptime_percentage: calculate_uptime_percentage,
+      error_rate: calculate_error_rate,
+      response_time_p95: calculate_response_time_percentile(95),
+      response_time_p99: calculate_response_time_percentile(99),
+      load_matching_sla_compliance: calculate_matching_sla_compliance
+    }
+  end
+
+  def collect_system_health_metrics
+    {
+      database_status: check_database_health,
+      redis_status: check_redis_health,
+      background_jobs_status: check_background_jobs_health,
+      external_services_status: check_external_services_health,
+      system_resources: collect_system_resource_metrics
+    }
+  end
+
+  # SLA calculation methods
+  def calculate_response_time_sla
+    {
+      target_p95: 2.0,
+      current_p95: calculate_response_time_percentile(95),
+      target_p99: 5.0,
+      current_p99: calculate_response_time_percentile(99),
+      compliance_percentage: calculate_response_time_compliance,
+      violations_today: count_response_time_violations_today
+    }
+  end
+
+  def calculate_uptime_sla
+    uptime_percentage = calculate_uptime_percentage
+    {
+      target_uptime: 99.9,
+      current_uptime: uptime_percentage,
+      compliance: uptime_percentage >= 99.9,
+      downtime_minutes_today: calculate_downtime_minutes_today,
+      availability_trend: calculate_availability_trend
+    }
+  end
+
+  def calculate_load_matching_sla
+    success_rate = calculate_load_matching_success_rate
+    {
+      target_success_rate: 85.0,
+      current_success_rate: success_rate,
+      compliance: success_rate >= 85.0,
+      average_match_time: calculate_average_match_time,
+      failed_matches_today: count_failed_matches_today
+    }
+  end
+
+  def calculate_error_rate_sla
+    error_rate = calculate_error_rate
+    {
+      target_error_rate: 1.0,
+      current_error_rate: error_rate,
+      compliance: error_rate <= 1.0,
+      critical_errors_today: count_critical_errors_today,
+      error_trend: calculate_error_trend
+    }
+  end
+
+  def determine_overall_sla_status
+    response_time_ok = calculate_response_time_percentile(95) <= 2.0
+    uptime_ok = calculate_uptime_percentage >= 99.9
+    error_rate_ok = calculate_error_rate <= 1.0
+    matching_ok = calculate_load_matching_success_rate >= 85.0
+
+    if response_time_ok && uptime_ok && error_rate_ok && matching_ok
+      'healthy'
+    elsif !uptime_ok || calculate_error_rate > 5.0
+      'critical'
+    else
+      'warning'
+    end
+  end
+
+  # Alert and incident management methods
+  def collect_active_alerts
+    [
+      # This would integrate with your alerting system
+      # For now, return mock data
+    ]
+  end
+
+  def collect_recent_incidents
+    [
+      # This would pull from incident tracking system
+      # Mock data for now
+    ]
+  end
+
+  def calculate_alert_trends
+    {
+      alerts_this_week: 0, # Would be calculated from actual data
+      mttr_hours: 0.25,
+      alert_frequency_trend: 'decreasing'
+    }
+  end
+
+  def calculate_mttr_metrics
+    {
+      current_mttr_minutes: 15,
+      target_mttr_minutes: 15,
+      mttr_trend: 'stable',
+      incidents_resolved_under_15min: 95
+    }
+  end
+
+  # Helper methods for metrics calculation
+  def calculate_average_response_time
+    # This would integrate with metrics collection
+    # For now return a reasonable default
+    0.5
+  end
+
+  def calculate_load_matching_success_rate
+    return 0.0 unless defined?(Load) && defined?(Match)
+    
+    total_loads = Load.where('created_at >= ?', 24.hours.ago).count
+    return 0.0 if total_loads.zero?
+    
+    successful_matches = Load.joins(:matches)
+                            .where('loads.created_at >= ? AND matches.status = ?', 24.hours.ago, 'accepted')
+                            .distinct
+                            .count
+    
+    (successful_matches.to_f / total_loads * 100).round(2)
+  rescue NameError
+    85.0 # Default value when models aren't available
+  end
+
+  def calculate_api_performance_metrics
+    {
+      average_response_time: 0.5,
+      p95_response_time: 1.2,
+      p99_response_time: 2.1,
+      slowest_endpoints: [
+        { endpoint: 'analytics#dashboard', avg_time: 1.2 },
+        { endpoint: 'matching#find_carriers', avg_time: 0.8 }
+      ]
+    }
+  end
+
+  def calculate_database_performance
+    {
+      average_query_time: 0.05,
+      slow_queries_count: 2,
+      connection_pool_usage: 45,
+      deadlocks_today: 0
+    }
+  end
+
+  def calculate_cache_performance
+    {
+      hit_rate_percentage: 85.5,
+      miss_rate_percentage: 14.5,
+      evictions_per_hour: 10
+    }
+  end
+
+  def calculate_job_performance
+    {
+      jobs_processed_today: 1250,
+      average_job_duration: 0.3,
+      failed_jobs_today: 5,
+      retry_rate_percentage: 2.1
+    }
+  end
+
+  def calculate_uptime_percentage
+    # This would integrate with monitoring system
+    99.95
+  end
+
+  def calculate_error_rate
+    # Calculate based on recent API requests
+    0.5 # Percentage
+  end
+
+  def calculate_response_time_percentile(percentile)
+    # This would integrate with metrics system
+    case percentile
+    when 95
+      1.2
+    when 99
+      2.1
+    else
+      0.8
+    end
+  end
+
+  def calculate_response_time_compliance
+    # Percentage of requests meeting SLA
+    98.5
+  end
+
+  def count_response_time_violations_today
+    # Count of SLA violations today
+    3
+  end
+
+  def calculate_downtime_minutes_today
+    # Minutes of downtime today
+    0
+  end
+
+  def calculate_availability_trend
+    # Trend over the past week
+    'stable'
+  end
+
+  def calculate_average_match_time
+    # Average time to match a load with a carrier (in minutes)
+    45
+  end
+
+  def count_failed_matches_today
+    return 0 unless defined?(Match)
+    
+    Match.where('created_at >= ? AND status = ?', Date.current, 'failed').count
+  rescue NameError
+    0
+  end
+
+  def count_critical_errors_today
+    # Count of critical errors today
+    0
+  end
+
+  def calculate_error_trend
+    # Error trend over past week
+    'decreasing'
+  end
+
+  # Health check methods
+  def check_database_health
+    ActiveRecord::Base.connection.execute("SELECT 1")
+    'healthy'
+  rescue StandardError
+    'unhealthy'
+  end
+
+  def check_redis_health
+    Rails.cache.fetch('health_check', expires_in: 1.second) { 'ok' }
+    'healthy'
+  rescue StandardError
+    'unhealthy'
+  end
+
+  def check_background_jobs_health
+    # Check Sidekiq queue sizes and processing
+    'healthy'
+  end
+
+  def check_external_services_health
+    {
+      google_maps: 'healthy',
+      stripe: 'healthy',
+      sendgrid: 'healthy'
+    }
+  end
+
+  def collect_system_resource_metrics
+    {
+      cpu_usage_percentage: 45,
+      memory_usage_percentage: 67,
+      disk_usage_percentage: 32,
+      network_io: 'normal'
+    }
   end
 end

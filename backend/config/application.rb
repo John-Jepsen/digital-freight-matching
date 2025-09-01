@@ -40,5 +40,16 @@ module Backend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+    
+    # Monitoring and metrics configuration
+    config.monitoring = ActiveSupport::OrderedOptions.new
+    config.monitoring.enabled = ENV.fetch('MONITORING_ENABLED', 'true') == 'true'
+    config.monitoring.metrics_path = '/metrics'
+    config.monitoring.business_metrics_collection_interval = 5.minutes
+    
+    # Track application start time for uptime calculations
+    config.after_initialize do
+      Rails.application.started_at = Time.current
+    end
   end
 end
