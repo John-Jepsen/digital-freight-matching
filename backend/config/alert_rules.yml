@@ -1,0 +1,219 @@
+# Prometheus Alert Rules for Digital Freight Matching Platform
+# These rules define SLA-based alerts and business metric thresholds
+
+groups:
+  # Application Performance & SLA Alerts
+  - name: freight_sla_alerts
+    rules:
+      # API Response Time SLA Violation
+      - alert: HighAPIResponseTime
+        expr: freight_app_api_response_time_seconds{quantile="0.95"} > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          sla_type: response_time
+        annotations:
+          summary: "High API response time detected"
+          description: "95th percentile API response time is {{ $value }}s (threshold: 2.0s) for endpoint {{ $labels.controller }}/{{ $labels.action }}"
+
+      # Critical API Response Time
+      - alert: CriticalAPIResponseTime
+        expr: freight_app_api_response_time_seconds{quantile="0.95"} > 5.0
+        for: 1m
+        labels:
+          severity: critical
+          sla_type: response_time
+        annotations:
+          summary: "Critical API response time detected"
+          description: "95th percentile API response time is {{ $value }}s (threshold: 5.0s) for endpoint {{ $labels.controller }}/{{ $labels.action }}"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(freight_app_api_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for endpoint {{ $labels.endpoint }}"
+
+      # Critical Error Rate
+      - alert: CriticalErrorRate
+        expr: rate(freight_app_api_requests_total{status=~"5.."}[5m]) > 0.2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for endpoint {{ $labels.endpoint }}"
+
+  # Business Metrics Alerts
+  - name: freight_business_alerts
+    rules:
+      # Low Load Matching Success Rate
+      - alert: LowLoadMatchingSuccessRate
+        expr: |
+          (
+            rate(freight_app_load_matches_total[1h]) /
+            (rate(freight_app_load_matches_total[1h]) + rate(freight_app_failed_load_matches_total[1h]))
+          ) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          business_impact: high
+        annotations:
+          summary: "Load matching success rate is below threshold"
+          description: "Load matching success rate is {{ $value | humanizePercentage }} (threshold: 70%)"
+
+      # Critical Load Matching Failure
+      - alert: CriticalLoadMatchingFailure
+        expr: |
+          (
+            rate(freight_app_load_matches_total[1h]) /
+            (rate(freight_app_load_matches_total[1h]) + rate(freight_app_failed_load_matches_total[1h]))
+          ) < 0.5
+        for: 5m
+        labels:
+          severity: critical
+          business_impact: critical
+        annotations:
+          summary: "Critical load matching failure rate"
+          description: "Load matching success rate is {{ $value | humanizePercentage }} (threshold: 50%)"
+
+      # High Load Cancellation Rate
+      - alert: HighLoadCancellationRate
+        expr: |
+          rate(freight_app_load_cancellations_total[1h]) /
+          rate(freight_app_load_posts_total[1h]) > 0.2
+        for: 15m
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "High load cancellation rate detected"
+          description: "Load cancellation rate is {{ $value | humanizePercentage }} (threshold: 20%)"
+
+      # Low Carrier Utilization
+      - alert: LowCarrierUtilization
+        expr: avg(carrier_metrics_carrier_utilization_rate) < 60
+        for: 30m
+        labels:
+          severity: warning
+          business_impact: medium
+        annotations:
+          summary: "Low carrier utilization rate"
+          description: "Average carrier utilization is {{ $value }}% (threshold: 60%)"
+
+      # Revenue Drop Alert
+      - alert: RevenueDropDetected
+        expr: |
+          (
+            rate(freight_app_platform_revenue_total_dollars[1h]) -
+            rate(freight_app_platform_revenue_total_dollars[1h] offset 24h)
+          ) / rate(freight_app_platform_revenue_total_dollars[1h] offset 24h) < -0.2
+        for: 1h
+        labels:
+          severity: critical
+          business_impact: critical
+        annotations:
+          summary: "Significant revenue drop detected"
+          description: "Revenue has dropped by {{ $value | humanizePercentage }} compared to yesterday"
+
+  # System Health Alerts
+  - name: freight_system_alerts
+    rules:
+      # Application Down
+      - alert: ApplicationDown
+        expr: up{job="freight-rails-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          system_impact: critical
+        annotations:
+          summary: "Freight matching application is down"
+          description: "The main application is not responding"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionIssues
+        expr: freight_app_application_errors_total{error_type=~".*Database.*|.*Connection.*"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection issues detected"
+          description: "Database connection errors detected: {{ $value }} errors"
+
+  # Payment and Financial Alerts
+  - name: freight_payment_alerts
+    rules:
+      # High Payment Failure Rate
+      - alert: HighPaymentFailureRate
+        expr: rate(freight_app_payment_failures_total[10m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          business_impact: high
+        annotations:
+          summary: "High payment failure rate detected"
+          description: "Payment failure rate is {{ $value }} per second"
+
+      # Abnormal Load Value Distribution
+      - alert: AbnormalLoadValues
+        expr: |
+          freight_app_load_value_dollars{quantile="0.95"} > 
+          (freight_app_average_load_value_dollars * 3)
+        for: 10m
+        labels:
+          severity: warning
+          business_impact: low
+        annotations:
+          summary: "Abnormal load values detected"
+          description: "95th percentile load value ({{ $value }}) is 3x higher than average"
+
+  # Security and Abuse Alerts
+  - name: freight_security_alerts
+    rules:
+      # High Authentication Failures
+      - alert: HighAuthenticationFailures
+        expr: |
+          rate(freight_app_application_errors_total{error_type="authentication_failed"}[10m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          security_impact: medium
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value }} per second"
+
+      # Possible DDoS Attack
+      - alert: PossibleDDoSAttack
+        expr: rate(freight_app_api_requests_total[1m]) > 1000
+        for: 1m
+        labels:
+          severity: critical
+          security_impact: high
+        annotations:
+          summary: "Possible DDoS attack detected"
+          description: "Request rate is {{ $value }} per second (threshold: 1000/s)"

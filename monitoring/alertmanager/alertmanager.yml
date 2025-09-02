@@ -1,0 +1,208 @@
+# Alertmanager configuration for Digital Freight Matching
+# Handles alert routing and notifications with escalation policies
+
+global:
+  smtp_smarthost: '${SMTP_HOST:-localhost:587}'
+  smtp_from: '${ALERT_EMAIL_FROM:-alerts@freight-matching.com}'
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+# Templates for alert notifications
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Alert routing and grouping rules
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook.default'
+  
+  routes:
+    # Critical business impact alerts - immediate escalation
+    - match:
+        severity: critical
+        business_impact: critical
+      receiver: 'critical-business-alerts'
+      group_wait: 0s
+      repeat_interval: 5m
+    
+    # System critical alerts
+    - match:
+        severity: critical
+        system_impact: critical
+      receiver: 'critical-system-alerts'
+      group_wait: 0s
+      repeat_interval: 10m
+    
+    # High business impact warnings
+    - match:
+        severity: warning
+        business_impact: high
+      receiver: 'business-warnings'
+      group_wait: 5m
+      repeat_interval: 30m
+    
+    # Security alerts
+    - match:
+        security_impact: high
+      receiver: 'security-alerts'
+      group_wait: 0s
+      repeat_interval: 15m
+    
+    # SLA violation alerts
+    - match:
+        sla_type: response_time
+      receiver: 'sla-alerts'
+      repeat_interval: 20m
+    
+    # Default route for other alerts
+    - match: {}
+      receiver: 'default-alerts'
+      repeat_interval: 1h
+
+# Notification receivers with escalation
+receivers:
+  # Default webhook receiver
+  - name: 'web.hook.default'
+    webhook_configs:
+      - url: 'http://freight_api:3000/api/v1/alerts/webhook'
+        send_resolved: true
+
+  # Critical business alerts - Multiple channels
+  - name: 'critical-business-alerts'
+    email_configs:
+      - to: '${ONCALL_EMAIL:-admin@freight-matching.com}'
+        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - Business Impact'
+        body: |
+          Alert: {{ .GroupLabels.alertname }}
+          Severity: CRITICAL
+          Business Impact: {{ .CommonLabels.business_impact }}
+          
+          Summary: {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          
+          Time: {{ .CommonLabels.timestamp }}
+          
+          This is a critical business alert requiring immediate attention.
+    
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#critical-alerts'
+        title: '🚨 CRITICAL BUSINESS ALERT'
+        text: |
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Severity:* CRITICAL
+          *Business Impact:* {{ .CommonLabels.business_impact }}
+          *Summary:* {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+          *Description:* {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+
+  # Critical system alerts
+  - name: 'critical-system-alerts'
+    email_configs:
+      - to: '${ONCALL_EMAIL:-admin@freight-matching.com}'
+        subject: '🚨 SYSTEM CRITICAL: {{ .GroupLabels.alertname }}'
+        body: |
+          System Critical Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          System Impact: {{ .CommonLabels.system_impact }}
+          
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+          
+          Immediate system intervention required.
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#system-alerts'
+        title: '⚠️ SYSTEM CRITICAL'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  # Business warnings
+  - name: 'business-warnings'
+    email_configs:
+      - to: '${BUSINESS_TEAM_EMAIL:-business@freight-matching.com}'
+        subject: '⚠️ Business Warning: {{ .GroupLabels.alertname }}'
+        body: |
+          Business Warning Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Business Impact: {{ .CommonLabels.business_impact }}
+          
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#business-alerts'
+        title: '⚠️ Business Warning'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  # Security alerts
+  - name: 'security-alerts'
+    email_configs:
+      - to: '${SECURITY_TEAM_EMAIL:-security@freight-matching.com}'
+        subject: '🔒 SECURITY ALERT: {{ .GroupLabels.alertname }}'
+        body: |
+          Security Alert Detected
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Security Impact: {{ .CommonLabels.security_impact }}
+          
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+          
+          Immediate security review required.
+
+  # SLA violation alerts
+  - name: 'sla-alerts'
+    email_configs:
+      - to: '${SLA_TEAM_EMAIL:-sla@freight-matching.com}'
+        subject: '📊 SLA Violation: {{ .GroupLabels.alertname }}'
+        body: |
+          SLA Violation Detected
+          
+          Alert: {{ .GroupLabels.alertname }}
+          SLA Type: {{ .CommonLabels.sla_type }}
+          
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+  # Default alerts
+  - name: 'default-alerts'
+    email_configs:
+      - to: '${TEAM_EMAIL:-team@freight-matching.com}'
+        subject: 'Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Alert Notification
+          
+          {{ range .Alerts }}
+          Alert: {{ .Labels.alertname }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+# Inhibition rules - prevent spam
+inhibit_rules:
+  # Inhibit any warning if there's a critical alert for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service', 'instance']
+
+  # Inhibit endpoint alerts if the whole service is down
+  - source_match:
+      alertname: 'ApplicationDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['service']
