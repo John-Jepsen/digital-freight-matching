@@ -90,6 +90,27 @@ class Carrier < ApplicationRecord
     where("service_areas::text ILIKE ?", "%#{state_code}%")
   }
   scope :insurance_valid, -> { where('insurance_expiry > ?', Date.current) }
+  
+  # Performance-optimized scopes using composite indexes
+  scope :eligible_for_matching, -> {
+    where(is_active: true, is_verified: true)
+      .where('insurance_expiry > ?', Date.current)
+  }
+  
+  scope :with_safety_standard, ->(min_rating = 'satisfactory') {
+    where(is_active: true, is_verified: true, safety_rating: min_rating)
+  }
+  
+  scope :near_location, ->(lat, lng, radius_miles = 100) {
+    where(
+      "3959 * acos(
+        cos(radians(?)) * cos(radians(latitude)) * 
+        cos(radians(longitude) - radians(?)) + 
+        sin(radians(?)) * sin(radians(latitude))
+      ) <= ?",
+      lat, lng, lat, radius_miles
+    ).where.not(latitude: nil, longitude: nil)
+  }
 
   # Callbacks
   before_save :normalize_data
