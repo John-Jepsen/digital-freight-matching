@@ -1,4 +1,4 @@
-class CreateRoutes < ActiveRecord::Migration[8.0]
+class CreateRoutes < ActiveRecord::Migration[7.1]
   def change
     create_table :routes do |t|
       t.references :match, null: false, foreign_key: true

@@ -1,4 +1,4 @@
-class CreateShippers < ActiveRecord::Migration[8.0]
+class CreateShippers < ActiveRecord::Migration[7.1]
   def change
     create_table :shippers do |t|
       t.references :user, null: false, foreign_key: true

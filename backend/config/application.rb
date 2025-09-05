@@ -49,7 +49,7 @@ module Backend
     
     # Track application start time for uptime calculations
     config.after_initialize do
-      Rails.application.started_at = Time.current
+      # Rails.application.started_at = Time.current
     end
   end
 end

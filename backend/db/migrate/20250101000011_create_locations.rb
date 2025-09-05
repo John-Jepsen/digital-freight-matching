@@ -1,4 +1,4 @@
-class CreateLocations < ActiveRecord::Migration[8.0]
+class CreateLocations < ActiveRecord::Migration[7.1]
   def change
     create_table :locations do |t|
       t.string :name, null: false

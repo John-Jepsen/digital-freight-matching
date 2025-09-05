@@ -1,4 +1,4 @@
-class CreateCargoDetails < ActiveRecord::Migration[8.0]
+class CreateCargoDetails < ActiveRecord::Migration[7.1]
   def change
     create_table :cargo_details do |t|
       t.references :load, null: false, foreign_key: true

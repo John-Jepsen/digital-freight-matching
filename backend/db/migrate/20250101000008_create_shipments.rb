@@ -1,4 +1,4 @@
-class CreateShipments < ActiveRecord::Migration[8.0]
+class CreateShipments < ActiveRecord::Migration[7.1]
   def change
     create_table :shipments do |t|
       t.references :load, null: false, foreign_key: true

@@ -1,4 +1,4 @@
-class CreateTrackingEvents < ActiveRecord::Migration[8.0]
+class CreateTrackingEvents < ActiveRecord::Migration[7.1]
   def change
     create_table :tracking_events do |t|
       t.references :shipment, null: false, foreign_key: true

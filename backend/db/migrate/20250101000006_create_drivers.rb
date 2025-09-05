@@ -1,4 +1,4 @@
-class CreateDrivers < ActiveRecord::Migration[8.0]
+class CreateDrivers < ActiveRecord::Migration[7.1]
   def change
     create_table :drivers do |t|
       t.references :user, null: true, foreign_key: true

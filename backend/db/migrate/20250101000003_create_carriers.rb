@@ -1,4 +1,4 @@
-class CreateCarriers < ActiveRecord::Migration[8.0]
+class CreateCarriers < ActiveRecord::Migration[7.1]
   def change
     create_table :carriers do |t|
       t.references :user, null: false, foreign_key: true

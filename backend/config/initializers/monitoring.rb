@@ -93,9 +93,9 @@ Yabeda.configure do
 end
 
 # Configure Prometheus exporter
-Yabeda::Prometheus.configure do |config|
-  config.comment_enabled = true
-end
+# Yabeda::Prometheus.configure do |config|
+#   config.comment_enabled = true
+# end
 
 # Business metrics collector service
 class BusinessMetricsCollector
@@ -193,15 +193,15 @@ class BusinessMetricsCollector
 end
 
 # Schedule metrics collection
-if defined?(Sidekiq)
-  require 'sidekiq-cron'
-  
-  # Collect business metrics every 5 minutes
-  Sidekiq::Cron::Job.create(
-    'business_metrics_collection',
-    '*/5 * * * *', # Every 5 minutes
-    'BusinessMetricsCollectionJob'
-  )
-end
+# if defined?(Sidekiq)
+#   require 'sidekiq-cron'
+#   
+#   # Collect business metrics every 5 minutes
+#   Sidekiq::Cron::Job.create(
+#     'business_metrics_collection',
+#     '*/5 * * * *', # Every 5 minutes
+#     'BusinessMetricsCollectionJob'
+#   )
+# end
 
 Rails.logger.info "Monitoring system initialized with comprehensive APM and business metrics"
