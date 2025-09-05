@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: freight-sidekiq
+  namespace: digital-freight-matching
+  labels:
+    app: freight-sidekiq
+    component: worker
+    cost-center: "freight-platform"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: freight-sidekiq
+  template:
+    metadata:
+      labels:
+        app: freight-sidekiq
+        component: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7433"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: freight-sidekiq
+        image: freight-api:latest
+        command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+        env:
+        - name: RAILS_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: freight-app-config
+              key: RAILS_ENV
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: freight-app-secrets
+              key: secret-key-base
+        - name: DATABASE_URL
+          value: "postgresql://freight_user:$(POSTGRES_PASSWORD)@postgres:5432/freight_matching"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: freight-app-secrets
+              key: postgres-password
+        - name: REDIS_URL
+          value: "redis://redis:6379/0"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - pgrep
+            - -f
+            - sidekiq
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sidekiqctl quiet && sleep 25"]
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: freight-sidekiq
+  namespace: digital-freight-matching
+  labels:
+    app: freight-sidekiq
+spec:
+  selector:
+    app: freight-sidekiq
+  ports:
+  - port: 7433
+    targetPort: 7433
+    name: metrics
+  type: ClusterIP

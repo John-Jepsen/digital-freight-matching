@@ -39,6 +39,19 @@ Yabeda.configure do
     gauge :active_shipments_count, comment: "Number of shipments in transit"
     gauge :available_carriers_count, comment: "Number of available carriers"
     
+    # Resource utilization metrics
+    gauge :memory_usage_bytes, comment: "Current memory usage in bytes"
+    gauge :memory_limit_bytes, comment: "Memory limit in bytes"
+    gauge :cpu_usage_percent, comment: "Current CPU usage percentage"
+    gauge :disk_usage_bytes, comment: "Current disk usage in bytes", tags: [:mount_point]
+    gauge :disk_free_bytes, comment: "Available disk space in bytes", tags: [:mount_point]
+    
+    # Container and scaling metrics
+    gauge :container_restarts_total, comment: "Total number of container restarts"
+    gauge :pod_ready_replicas, comment: "Number of ready pod replicas", tags: [:deployment]
+    gauge :pod_desired_replicas, comment: "Desired number of pod replicas", tags: [:deployment]
+    counter :scaling_events_total, comment: "Total number of scaling events", tags: [:direction, :deployment]
+    
     # Revenue and financial metrics
     histogram :load_value_dollars,
               comment: "Load value distribution in dollars",
@@ -107,6 +120,7 @@ class BusinessMetricsCollector
       collect_financial_metrics
       collect_system_health_metrics
       collect_carrier_metrics
+      collect_resource_metrics
     rescue StandardError => e
       Rails.logger.error "Failed to collect business metrics: #{e.message}"
       Yabeda.freight_app.application_errors_total.increment(
@@ -188,6 +202,59 @@ class BusinessMetricsCollector
       Carrier.where(status: 'available').count  
     rescue NameError
       0
+    end
+    
+    def collect_resource_metrics
+      # Memory metrics
+      begin
+        memory_stats = `cat /proc/meminfo`.lines.map { |line| line.split }
+        memory_total = memory_stats.find { |stat| stat[0] == 'MemTotal:' }&.dig(1)&.to_i&.*(1024)
+        memory_available = memory_stats.find { |stat| stat[0] == 'MemAvailable:' }&.dig(1)&.to_i&.*(1024)
+        
+        if memory_total && memory_available
+          memory_used = memory_total - memory_available
+          Yabeda.freight_app.memory_usage_bytes.set(memory_used)
+          Yabeda.freight_app.memory_limit_bytes.set(memory_total)
+        end
+      rescue StandardError => e
+        Rails.logger.warn "Failed to collect memory metrics: #{e.message}"
+      end
+      
+      # CPU metrics
+      begin
+        cpu_usage = `top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%us,//'`.to_f
+        Yabeda.freight_app.cpu_usage_percent.set(cpu_usage)
+      rescue StandardError => e
+        Rails.logger.warn "Failed to collect CPU metrics: #{e.message}"
+      end
+      
+      # Disk metrics
+      begin
+        disk_info = `df -B1`.lines[1..-1] # Skip header
+        disk_info.each do |line|
+          parts = line.split
+          next if parts.length < 6
+          
+          mount_point = parts[5]
+          used_bytes = parts[2].to_i
+          available_bytes = parts[3].to_i
+          
+          Yabeda.freight_app.disk_usage_bytes.set(used_bytes, mount_point: mount_point)
+          Yabeda.freight_app.disk_free_bytes.set(available_bytes, mount_point: mount_point)
+        end
+      rescue StandardError => e
+        Rails.logger.warn "Failed to collect disk metrics: #{e.message}"
+      end
+      
+      # Container restart count (if running in Kubernetes)
+      if ENV['KUBERNETES_SERVICE_HOST']
+        begin
+          restart_count = ENV['CONTAINER_RESTART_COUNT']&.to_i || 0
+          Yabeda.freight_app.container_restarts_total.set(restart_count)
+        rescue StandardError => e
+          Rails.logger.warn "Failed to collect container metrics: #{e.message}"
+        end
+      end
     end
   end
 end

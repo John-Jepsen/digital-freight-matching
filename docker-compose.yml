@@ -41,6 +41,20 @@ services:
     networks:
       - freight_network
     command: bundle exec rails server -b 0.0.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Sidekiq Background Jobs
   freight_sidekiq:
@@ -65,6 +79,14 @@ services:
     networks:
       - freight_network
     command: bundle exec sidekiq -C config/sidekiq.yml
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   # Karafka Kafka Consumer
   freight_karafka:
@@ -102,6 +124,19 @@ services:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - freight_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freight_user -d freight_matching"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Cache Service
   redis:
@@ -113,6 +148,19 @@ services:
       - redis_data:/data
     networks:
       - freight_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   # Message Queue
   zookeeper:

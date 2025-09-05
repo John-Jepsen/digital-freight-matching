@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: freight-app-metrics
+  namespace: digital-freight-matching
+  labels:
+    app: freight-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: freight-api
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: freight-sidekiq-metrics
+  namespace: digital-freight-matching
+  labels:
+    app: freight-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: freight-sidekiq
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: freight-app-alerts
+  namespace: digital-freight-matching
+  labels:
+    app: freight-monitoring
+spec:
+  groups:
+  - name: freight-app.rules
+    rules:
+    - alert: FreightAPIHighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        service: freight-api
+      annotations:
+        summary: "High error rate detected for Freight API"
+        description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+    
+    - alert: FreightAPIHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2.0
+      for: 5m
+      labels:
+        severity: warning
+        service: freight-api
+      annotations:
+        summary: "High latency detected for Freight API"
+        description: "95th percentile latency is {{ $value }}s for the last 5 minutes"
+    
+    - alert: FreightAPIHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{pod=~"freight-api-.*"}[5m]) > 0.8
+      for: 10m
+      labels:
+        severity: warning
+        service: freight-api
+      annotations:
+        summary: "High CPU usage for Freight API"
+        description: "CPU usage is {{ $value | humanizePercentage }} for pod {{ $labels.pod }}"
+    
+    - alert: FreightAPIHighMemoryUsage
+      expr: container_memory_usage_bytes{pod=~"freight-api-.*"} / container_spec_memory_limit_bytes > 0.9
+      for: 5m
+      labels:
+        severity: critical
+        service: freight-api
+      annotations:
+        summary: "High memory usage for Freight API"
+        description: "Memory usage is {{ $value | humanizePercentage }} for pod {{ $labels.pod }}"
+    
+    - alert: FreightSidekiqQueueBacklog
+      expr: sidekiq_queue_size > 1000
+      for: 5m
+      labels:
+        severity: warning
+        service: freight-sidekiq
+      annotations:
+        summary: "Large Sidekiq queue backlog"
+        description: "Queue {{ $labels.queue }} has {{ $value }} jobs pending"
+    
+    - alert: FreightDatabaseConnections
+      expr: postgresql_connections / postgresql_max_connections > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: postgres
+      annotations:
+        summary: "High database connection usage"
+        description: "Database connection usage is {{ $value | humanizePercentage }}"
