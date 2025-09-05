@@ -1,29 +1,70 @@
 # PostgreSQL configuration for Digital Freight Matching Platform
+# Optimized for high concurrency with read replicas and connection pooling
 #
 default: &default
   adapter: postgresql
   encoding: unicode
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Optimized connection pool for high concurrency (5x more users = 2500+ concurrent)
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 25 } %>
+  # Connection pool timeout (seconds)
+  timeout: 5000
+  # Connection reaping frequency (seconds) - prevents connection leaks
+  reaping_frequency: 10
+  # Dead connection cleanup
+  dead_connection_timeout: 10
 
 development:
-  <<: *default
-  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
-  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
-  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  primary:
+    <<: *default
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  
+  replica:
+    <<: *default
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    host: <%= ENV.fetch("DATABASE_REPLICA_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_REPLICA_PORT") { 5433 } %>
+    replica: true
 
 test:
-  <<: *default
-  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>_test
-  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
-  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  primary:
+    <<: *default
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>_test
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  
+  replica:
+    <<: *default
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>_test
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    host: <%= ENV.fetch("DATABASE_REPLICA_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_REPLICA_PORT") { 5433 } %>
+    replica: true
 
 production:
-  <<: *default
-  url: <%= ENV["DATABASE_URL"] %>
-  database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
-  username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+  primary:
+    <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    # Production optimizations for high load
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 50 } %>
+    
+  replica:
+    <<: *default
+    url: <%= ENV["DATABASE_REPLICA_URL"] %>
+    database: <%= ENV.fetch("DATABASE_NAME") { "freight_matching" } %>
+    username: <%= ENV.fetch("DATABASE_USER") { "freight_user" } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "freight_pass_changeme" } %>
+    # Larger pool for read replicas to handle read-heavy workload
+    pool: <%= ENV.fetch("RAILS_REPLICA_MAX_THREADS") { 75 } %>
+    replica: true

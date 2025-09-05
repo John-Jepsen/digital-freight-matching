@@ -95,11 +95,82 @@ services:
       POSTGRES_DB: freight_matching
       POSTGRES_USER: freight_user
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+      # Enable streaming replication
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./scripts/postgres-primary.conf:/etc/postgresql/postgresql.conf
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - freight_network
+
+  # PostgreSQL Read Replica 1
+  postgres_replica1:
+    image: postgres:14-alpine
+    container_name: freight_postgres_replica1
+    environment:
+      POSTGRES_DB: freight_matching
+      POSTGRES_USER: freight_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+      POSTGRES_PRIMARY_HOST: postgres
+      POSTGRES_PRIMARY_PORT: 5432
+      POSTGRES_REPLICA_USER: freight_user
+      POSTGRES_REPLICA_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_replica1_data:/var/lib/postgresql/data
+      - ./scripts/postgres-replica.conf:/etc/postgresql/postgresql.conf
+      - ./scripts/setup-replica.sh:/docker-entrypoint-initdb.d/setup-replica.sh
+    depends_on:
+      - postgres
+    command: >
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        pg_basebackup -h postgres -D /var/lib/postgresql/data -U freight_user -v -P -W
+        echo 'standby_mode = on' >> /var/lib/postgresql/data/recovery.conf
+        echo 'primary_conninfo = ''host=postgres port=5432 user=freight_user password=${POSTGRES_PASSWORD:-freight_pass_changeme}''' >> /var/lib/postgresql/data/recovery.conf
+        echo 'trigger_file = ''/tmp/postgresql.trigger.5433''' >> /var/lib/postgresql/data/recovery.conf
+      fi
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+      "
+    networks:
+      - freight_network
+
+  # PostgreSQL Read Replica 2
+  postgres_replica2:
+    image: postgres:14-alpine
+    container_name: freight_postgres_replica2
+    environment:
+      POSTGRES_DB: freight_matching
+      POSTGRES_USER: freight_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+      POSTGRES_PRIMARY_HOST: postgres
+      POSTGRES_PRIMARY_PORT: 5432
+      POSTGRES_REPLICA_USER: freight_user
+      POSTGRES_REPLICA_PASSWORD: ${POSTGRES_PASSWORD:-freight_pass_changeme}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_replica2_data:/var/lib/postgresql/data
+      - ./scripts/postgres-replica.conf:/etc/postgresql/postgresql.conf
+      - ./scripts/setup-replica.sh:/docker-entrypoint-initdb.d/setup-replica.sh
+    depends_on:
+      - postgres
+    command: >
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        pg_basebackup -h postgres -D /var/lib/postgresql/data -U freight_user -v -P -W
+        echo 'standby_mode = on' >> /var/lib/postgresql/data/recovery.conf
+        echo 'primary_conninfo = ''host=postgres port=5432 user=freight_user password=${POSTGRES_PASSWORD:-freight_pass_changeme}''' >> /var/lib/postgresql/data/recovery.conf
+        echo 'trigger_file = ''/tmp/postgresql.trigger.5434''' >> /var/lib/postgresql/data/recovery.conf
+      fi
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+      "
     networks:
       - freight_network
 
@@ -403,6 +474,8 @@ services:
 
 volumes:
   postgres_data:
+  postgres_replica1_data:
+  postgres_replica2_data:
   redis_data:
   mongo_data:
   elasticsearch_data:
