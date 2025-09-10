@@ -90,6 +90,24 @@ class Vehicle < ApplicationRecord
   scope :team_capable, -> { where(is_team_capable: true) }
   scope :maintenance_due, -> { where('maintenance_due_date <= ?', Date.current) }
   scope :inspection_due, -> { where('inspection_due_date <= ?', Date.current) }
+  
+  # Performance-optimized scopes using composite indexes
+  scope :available_for_load, ->(equipment_type, min_capacity = nil) {
+    scope = where(status: 'active', equipment_type: equipment_type)
+    scope = scope.where('capacity_weight >= ?', min_capacity) if min_capacity
+    scope
+  }
+  
+  scope :capable_of_requirements, ->(equipment_type, is_hazmat = false, is_temp_controlled = false) {
+    scope = where(equipment_type: equipment_type, status: 'active')
+    scope = scope.where(is_hazmat_certified: true) if is_hazmat
+    scope = scope.where(is_temperature_controlled: true) if is_temp_controlled
+    scope
+  }
+  
+  scope :by_carrier_and_capabilities, ->(carrier_id, equipment_type, status = 'active') {
+    where(carrier_id: carrier_id, equipment_type: equipment_type, status: status)
+  }
 
   # Callbacks
   before_validation :normalize_vin
