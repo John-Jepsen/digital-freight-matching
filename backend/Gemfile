@@ -32,6 +32,7 @@ gem "net-smtp"                        # Email (Rails 7+ requirement)
 gem "rack-cors"                       # CORS handling
 gem "rack-attack", "~> 6.7"          # Rate limiting
 gem "jbuilder"                        # JSON APIs
+
 gem "prometheus-client", "~> 4.2"     # Prometheus metrics client
 gem "yabeda", "~> 0.12"              # Application metrics framework
 gem "yabeda-prometheus", "~> 0.9"     # Prometheus exporter for yabeda
