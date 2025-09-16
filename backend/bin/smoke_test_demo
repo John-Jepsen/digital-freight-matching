@@ -1,0 +1,188 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Demo script for API Smoke Testing Framework
+# This script demonstrates the framework capabilities without requiring Rails
+
+require_relative '../lib/api_smoke_test_framework'
+require_relative '../lib/api_smoke_test_runners'
+require_relative '../lib/api_smoke_test_orchestrator'
+
+puts "🔥 API Smoke Testing Framework Demo"
+puts "=" * 50
+
+# Configure for demo (using a public API for testing)
+ApiSmokeTestFramework.configure do |config|
+  config.base_url = 'https://httpbin.org'
+  config.timeout = 10
+  config.logger.level = Logger::INFO
+end
+
+# Create demo endpoints (simulating what would be discovered from Rails routes)
+demo_endpoints = [
+  {
+    path: '/status/200',
+    method: 'get',
+    category: :health_check,
+    controller: 'demo',
+    action: 'health'
+  },
+  {
+    path: '/get',
+    method: 'get',
+    category: :get_resource,
+    controller: 'demo',
+    action: 'show'
+  },
+  {
+    path: '/post',
+    method: 'post',
+    category: :create_resource,
+    controller: 'demo',
+    action: 'create'
+  },
+  {
+    path: '/status/404',
+    method: 'get',
+    category: :get_resource,
+    controller: 'demo',
+    action: 'not_found'
+  },
+  {
+    path: '/delay/2',
+    method: 'get',
+    category: :custom_action,
+    controller: 'demo',
+    action: 'slow'
+  }
+]
+
+puts "\n📡 Testing with httpbin.org (public testing API)"
+puts "This demonstrates the framework without requiring a local Rails server"
+puts "\nDemo Endpoints:"
+demo_endpoints.each do |ep|
+  puts "  #{ep[:method].upcase} #{ep[:path]} (#{ep[:category]})"
+end
+
+# Create test runners
+puts "\n🧪 Creating Test Runners..."
+health_runner = ApiSmokeTestFramework::HealthCheckTestRunner.new
+resource_runner = ApiSmokeTestFramework::ResourceTestRunner.new
+
+# Test each endpoint
+puts "\n🚀 Running Tests..."
+results = []
+
+demo_endpoints.each do |endpoint|
+  runner = case endpoint[:category]
+          when :health_check
+            health_runner
+          else
+            resource_runner
+          end
+  
+  puts "\nTesting: #{endpoint[:method].upcase} #{endpoint[:path]}"
+  result = runner.run_test(endpoint)
+  results << result
+  
+  status_icon = result[:passed] ? "✅" : "❌"
+  puts "#{status_icon} Result: #{result[:status]} (#{result[:response_time_ms]}ms)"
+end
+
+# Generate summary
+puts "\n📊 Test Summary"
+puts "=" * 30
+
+passed_count = results.count { |r| r[:passed] }
+failed_count = results.length - passed_count
+success_rate = results.empty? ? 0 : (passed_count.to_f / results.length * 100).round(2)
+
+puts "Total Tests: #{results.length}"
+puts "Passed: #{passed_count}"
+puts "Failed: #{failed_count}"
+puts "Success Rate: #{success_rate}%"
+
+if results.any?
+  response_times = results.filter_map { |r| r[:response_time_ms] }
+  avg_time = response_times.empty? ? 0 : (response_times.sum / response_times.length).round(2)
+  puts "Average Response Time: #{avg_time}ms"
+  
+  slowest = results.max_by { |r| r[:response_time_ms] || 0 }
+  if slowest && slowest[:response_time_ms]
+    puts "Slowest Endpoint: #{slowest[:endpoint][:path]} (#{slowest[:response_time_ms]}ms)"
+  end
+end
+
+# Demonstrate report generation
+puts "\n📄 Report Generation Demo"
+puts "=" * 30
+
+# Create a mock orchestrator with results
+class DemoOrchestrator
+  attr_reader :results, :summary
+  
+  def initialize(results)
+    @results = results
+    generate_demo_summary
+  end
+  
+  def generate_report(format: :text)
+    case format
+    when :text
+      generate_text_report
+    when :json
+      { demo: true, results: @results, summary: @summary }.to_json
+    else
+      "Demo report in #{format} format"
+    end
+  end
+  
+  private
+  
+  def generate_demo_summary
+    passed = @results.count { |r| r[:passed] }
+    @summary = {
+      total_tests: @results.length,
+      passed_count: passed,
+      failed_count: @results.length - passed,
+      success_rate: @results.empty? ? 0 : (passed.to_f / @results.length * 100).round(2)
+    }
+  end
+  
+  def generate_text_report
+    report = []
+    report << "DEMO API SMOKE TEST RESULTS"
+    report << "=" * 30
+    report << ""
+    report << "Summary:"
+    report << "  Total: #{@summary[:total_tests]}"
+    report << "  Passed: #{@summary[:passed_count]}"
+    report << "  Failed: #{@summary[:failed_count]}"
+    report << "  Success Rate: #{@summary[:success_rate]}%"
+    report << ""
+    report << "Detailed Results:"
+    @results.each do |result|
+      endpoint = result[:endpoint]
+      icon = result[:passed] ? "✓" : "✗"
+      report << "  #{icon} #{endpoint[:method].upcase} #{endpoint[:path]} - #{result[:status]}"
+    end
+    report.join("\n")
+  end
+end
+
+orchestrator = DemoOrchestrator.new(results)
+
+puts "\nText Report:"
+puts orchestrator.generate_report(format: :text)
+
+puts "\nJSON Report Sample:"
+json_report = orchestrator.generate_report(format: :json)
+puts JSON.pretty_generate(JSON.parse(json_report))
+
+puts "\n🎉 Demo Complete!"
+puts "\nNext Steps:"
+puts "1. Start your Rails server: rails server -p 3001"
+puts "2. Run real smoke tests: rake smoke_test:all"
+puts "3. Try different categories: rake smoke_test:category[health_check]"
+puts "4. Generate reports: rake smoke_test:report[html]"
+puts "5. Read the docs: docs/api-smoke-testing-framework.md"
