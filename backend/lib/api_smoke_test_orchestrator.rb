@@ -106,6 +106,8 @@ module ApiSmokeTestFramework
     def setup_runners
       @runners[:health_check] = HealthCheckTestRunner.new(@config)
       @runners[:authentication] = AuthenticationTestRunner.new(@config)
+      @runners[:analytics] = AnalyticsTestRunner.new(@config)
+      @runners[:performance] = PerformanceTestRunner.new(@config)
       @runners[:default] = ResourceTestRunner.new(@config)
     end
 
@@ -115,6 +117,10 @@ module ApiSmokeTestFramework
         @runners[:health_check]
       when :authentication
         @runners[:authentication]
+      when :analytics
+        @runners[:analytics]
+      when :performance
+        @runners[:performance]
       else
         @runners[:default]
       end
@@ -340,10 +346,14 @@ module ApiSmokeTestFramework
           run_category_tests(category, args[2..-1])
         else
           puts "Usage: smoke_test category <category_name>"
-          puts "Available categories: health_check, authentication, list_resource, get_resource, create_resource, update_resource, delete_resource, custom_action"
+          puts "Available categories: health_check, authentication, analytics, performance, list_resource, get_resource, create_resource, update_resource, delete_resource, custom_action"
         end
       when 'discover'
         discover_endpoints
+      when 'performance'
+        run_performance_tests(args[1..-1])
+      when 'validate'
+        validate_configuration
       when 'help', '--help', '-h'
         show_help
       else
@@ -391,6 +401,95 @@ module ApiSmokeTestFramework
       end
     end
 
+    def self.run_performance_tests(options)
+      puts "🚀 Running Performance Tests"
+      puts "=" * 50
+      
+      orchestrator = SmokeTestOrchestrator.new
+      orchestrator.discover_endpoints
+      results = orchestrator.run_category_tests(:performance)
+      
+      if results.empty?
+        puts "No performance endpoints found. Running performance tests on health checks..."
+        # Fallback to testing health endpoints with performance runner
+        health_endpoints = orchestrator.instance_variable_get(:@endpoints).select { |ep| ep[:category] == :health_check }
+        
+        results = health_endpoints.map do |endpoint|
+          performance_runner = ApiSmokeTestFramework::PerformanceTestRunner.new
+          performance_runner.run_test(endpoint, { iterations: 5 })
+        end
+      end
+      
+      puts "Performance Test Results:"
+      puts "-" * 30
+      
+      results.each do |result|
+        endpoint = result[:endpoint]
+        puts "#{endpoint[:method].upcase} #{endpoint[:path]}"
+        puts "  Average Response Time: #{result[:response_time_ms]}ms"
+        puts "  Success Rate: #{result[:success_rate] || 'N/A'}%"
+        if result[:min_response_time] && result[:max_response_time]
+          puts "  Range: #{result[:min_response_time]}ms - #{result[:max_response_time]}ms"
+        end
+        puts ""
+      end
+    end
+
+    def self.validate_configuration
+      puts "🔧 Validating Smoke Test Configuration"
+      puts "=" * 50
+      
+      config = ApiSmokeTestFramework.configuration
+      
+      puts "Configuration:"
+      puts "  Base URL: #{config.base_url}"
+      puts "  Timeout: #{config.timeout}s"
+      puts "  Environment: #{config.environment}"
+      puts ""
+      
+      # Test basic connectivity
+      puts "Testing connectivity..."
+      begin
+        uri = URI(config.base_url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == 'https'
+        http.open_timeout = 5
+        http.read_timeout = 5
+        
+        response = http.head('/')
+        puts "✅ Server is reachable (#{response.code})"
+      rescue => e
+        puts "❌ Server connection failed: #{e.message}"
+        puts "💡 Make sure the server is running at #{config.base_url}"
+      end
+      
+      # Test Rails environment
+      if defined?(Rails)
+        puts "✅ Rails environment loaded"
+        puts "  Rails env: #{Rails.env}"
+        puts "  Rails version: #{Rails.version}"
+      else
+        puts "⚠️  Rails environment not loaded"
+        puts "💡 Some features may be limited without Rails"
+      end
+      
+      # Test endpoint discovery
+      puts ""
+      puts "Testing endpoint discovery..."
+      begin
+        orchestrator = SmokeTestOrchestrator.new
+        endpoints = orchestrator.discover_endpoints
+        puts "✅ Discovered #{endpoints.length} endpoints"
+        
+        if endpoints.empty?
+          puts "⚠️  No API endpoints found"
+          puts "💡 Make sure your Rails routes are configured"
+        end
+      rescue => e
+        puts "❌ Endpoint discovery failed: #{e.message}"
+      end
+    end
+
     def self.show_help
       puts <<~HELP
         API Smoke Test Framework
@@ -402,11 +501,15 @@ module ApiSmokeTestFramework
           all                   Run all smoke tests
           category <name>       Run tests for specific category
           discover             Discover all API endpoints
+          performance          Run performance tests
+          validate             Validate configuration
           help                 Show this help message
         
         Categories:
           health_check         Health check endpoints
           authentication       Auth endpoints (login, register, etc.)
+          analytics            Analytics and reporting endpoints
+          performance          Performance and load testing endpoints
           list_resource        GET /resource (index)
           get_resource         GET /resource/:id (show)
           create_resource      POST /resource (create)
@@ -422,7 +525,10 @@ module ApiSmokeTestFramework
         Examples:
           smoke_test all
           smoke_test category health_check
+          smoke_test category analytics
+          smoke_test performance
           smoke_test discover
+          smoke_test validate
       HELP
     end
   end
