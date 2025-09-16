@@ -36,6 +36,7 @@ cd digital-freight-matching
 | [**Project Overview**](./docs/project-overview.md) | Business case and solution approach |
 | [**System Architecture**](./docs/architecture.md) | Technical architecture and components |
 | [**API Reference**](./docs/api-reference.md) | Complete API documentation |
+| [**API Smoke Testing**](./docs/api-smoke-testing-framework.md) | Comprehensive API testing framework |
 | [**Database Design**](./docs/database.md) | Schema and relationships |
 | [**Security Guide**](./docs/security.md) | Security implementation and best practices |
 | [**Configuration**](./docs/configuration.md) | Environment setup and external services |
@@ -324,10 +325,39 @@ git push origin feature/load-matching-algorithm
 ```
 
 ### Testing Strategy
-- **Unit Tests**: Jest (Frontend), JUnit (Backend)
-- **Integration Tests**: Testcontainers for database tests
+- **Unit Tests**: RSpec (Backend), Jest (Frontend)
+- **Integration Tests**: RSpec request specs with database tests
+- **API Smoke Tests**: Comprehensive endpoint validation framework
 - **E2E Tests**: Cypress for critical user journeys
-- **Load Tests**: JMeter for performance validation
+- **Load Tests**: Artillery for performance validation
+
+#### API Smoke Testing Framework
+The platform includes a comprehensive API smoke testing framework:
+
+```bash
+# Run all API smoke tests
+rake smoke_test:all
+
+# Test specific endpoint categories
+rake smoke_test:category[health_check]
+rake smoke_test:category[authentication]
+
+# Generate detailed reports
+rake smoke_test:report[html]
+
+# Quick health checks
+rake smoke_test:health
+```
+
+Features:
+- **Automatic Endpoint Discovery**: Discovers all API routes automatically
+- **Categorized Testing**: Different strategies for health, auth, CRUD endpoints
+- **Authentication Handling**: Token management for protected endpoints
+- **Performance Monitoring**: Response time tracking and thresholds
+- **Multiple Report Formats**: Text, JSON, and HTML reports
+- **CI/CD Integration**: Easy integration with deployment pipelines
+
+See [API Smoke Testing Documentation](./docs/api-smoke-testing-framework.md) for complete details.
 
 ### CI/CD Pipeline
 1. **Code Quality**: ESLint, SonarQube analysis

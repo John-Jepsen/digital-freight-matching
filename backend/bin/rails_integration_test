@@ -1,0 +1,204 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Integration test to verify the smoke testing framework works with actual Rails routes
+# This script simulates what would happen when Rails is available
+
+puts "🧪 API Smoke Testing Framework - Rails Integration Test"
+puts "=" * 60
+
+# Add lib directory to load path
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
+require_relative '../lib/api_smoke_test_framework'
+require_relative '../lib/api_smoke_test_orchestrator'
+
+# Simulate Rails routes (what would come from Rails.application.routes.routes)
+class MockRoute
+  attr_reader :path, :verb, :defaults
+  
+  def initialize(path, verb, controller, action)
+    @path = MockPath.new(path)
+    @verb = verb
+    @defaults = { controller: controller, action: action }
+  end
+end
+
+class MockPath
+  attr_reader :spec
+  
+  def initialize(path)
+    @spec = path
+  end
+  
+  def to_s
+    @spec
+  end
+end
+
+# Mock Rails environment
+module Rails
+  class Application
+    def routes
+      Routes.new
+    end
+    
+    class Routes
+      def routes
+        [
+          MockRoute.new('/api/v1/health', 'GET', 'api/v1/health', 'show'),
+          MockRoute.new('/', 'GET', 'application', 'health'),
+          MockRoute.new('/api/v1/auth/login', 'POST', 'api/v1/auth', 'login'),
+          MockRoute.new('/api/v1/auth/register', 'POST', 'api/v1/auth', 'register'),
+          MockRoute.new('/api/v1/auth/logout', 'DELETE', 'api/v1/auth', 'logout'),
+          MockRoute.new('/api/v1/auth/me', 'GET', 'api/v1/auth', 'me'),
+          MockRoute.new('/api/v1/loads', 'GET', 'api/v1/loads', 'index'),
+          MockRoute.new('/api/v1/loads', 'POST', 'api/v1/loads', 'create'),
+          MockRoute.new('/api/v1/loads/:id', 'GET', 'api/v1/loads', 'show'),
+          MockRoute.new('/api/v1/loads/:id', 'PUT', 'api/v1/loads', 'update'),
+          MockRoute.new('/api/v1/loads/:id', 'DELETE', 'api/v1/loads', 'destroy'),
+          MockRoute.new('/api/v1/loads/search', 'GET', 'api/v1/loads', 'search'),
+          MockRoute.new('/api/v1/loads/:id/book', 'POST', 'api/v1/loads', 'book'),
+          MockRoute.new('/api/v1/carriers', 'GET', 'api/v1/carriers', 'index'),
+          MockRoute.new('/api/v1/carriers/:id', 'GET', 'api/v1/carriers', 'show'),
+          MockRoute.new('/api/v1/matching/recommendations', 'GET', 'api/v1/matching', 'recommendations'),
+          MockRoute.new('/api/v1/routes/optimize', 'POST', 'api/v1/routes', 'optimize'),
+          MockRoute.new('/api/v1/analytics/dashboard', 'GET', 'api/v1/analytics', 'dashboard')
+        ]
+      end
+    end
+  end
+  
+  def self.application
+    @application ||= Application.new
+  end
+end
+
+# Test the framework with mocked Rails environment
+puts "Setting up mocked Rails environment..."
+puts "Available routes: #{Rails.application.routes.routes.length}"
+
+# Create orchestrator and test endpoint discovery
+orchestrator = ApiSmokeTestFramework::SmokeTestOrchestrator.new
+
+puts "\n1️⃣  Testing Endpoint Discovery"
+puts "-" * 30
+
+endpoints = orchestrator.discover_endpoints
+puts "✅ Discovered #{endpoints.length} API endpoints"
+
+# Group by category and show results
+categories = endpoints.group_by { |ep| ep[:category] }
+categories.each do |category, eps|
+  category_name = category.to_s.split('_').map(&:capitalize).join(' ')
+  puts "  #{category_name}: #{eps.length} endpoints"
+  eps.each do |ep|
+    puts "    #{ep[:method].upcase.ljust(6)} #{ep[:path]}"
+  end
+end
+
+puts "\n2️⃣  Testing Category Identification"
+puts "-" * 30
+
+expected_categories = [
+  :health_check,
+  :authentication, 
+  :list_resource,
+  :get_resource,
+  :create_resource,
+  :update_resource,
+  :delete_resource,
+  :custom_action
+]
+
+found_categories = categories.keys
+expected_categories.each do |cat|
+  if found_categories.include?(cat)
+    puts "✅ #{cat.to_s.split('_').map(&:capitalize).join(' ')} - Found"
+  else
+    puts "❌ #{cat.to_s.split('_').map(&:capitalize).join(' ')} - Missing"
+  end
+end
+
+puts "\n3️⃣  Testing Endpoint Details"
+puts "-" * 30
+
+# Test a few specific endpoints
+test_cases = [
+  { path: '/api/v1/health', expected_category: :health_check, method: 'GET' },
+  { path: '/api/v1/auth/login', expected_category: :authentication, method: 'POST' },
+  { path: '/api/v1/loads', expected_category: :list_resource, method: 'GET' },
+  { path: '/api/v1/loads/:id', expected_category: :get_resource, method: 'GET' },
+  { path: '/api/v1/loads', expected_category: :create_resource, method: 'POST' },
+  { path: '/api/v1/loads/:id', expected_category: :update_resource, method: 'PUT' },
+  { path: '/api/v1/loads/:id', expected_category: :delete_resource, method: 'DELETE' },
+  { path: '/api/v1/routes/optimize', expected_category: :custom_action, method: 'POST' }
+]
+
+test_cases.each do |test_case|
+  endpoint = endpoints.find do |ep|
+    ep[:path] == test_case[:path] && ep[:method].upcase == test_case[:method].upcase
+  end
+  
+  if endpoint
+    if endpoint[:category] == test_case[:expected_category]
+      puts "✅ #{test_case[:method]} #{test_case[:path]} → #{endpoint[:category]}"
+    else
+      puts "❌ #{test_case[:method]} #{test_case[:path]} → #{endpoint[:category]} (expected #{test_case[:expected_category]})"
+    end
+  else
+    puts "❌ #{test_case[:method]} #{test_case[:path]} → NOT FOUND"
+  end
+end
+
+puts "\n4️⃣  Testing Runner Assignment"
+puts "-" * 30
+
+# Test that appropriate runners are assigned
+health_endpoints = endpoints.select { |ep| ep[:category] == :health_check }
+auth_endpoints = endpoints.select { |ep| ep[:category] == :authentication }
+resource_endpoints = endpoints.select { |ep| [:list_resource, :get_resource, :create_resource].include?(ep[:category]) }
+
+puts "Health check endpoints: #{health_endpoints.length}"
+puts "Authentication endpoints: #{auth_endpoints.length}"
+puts "Resource endpoints: #{resource_endpoints.length}"
+
+# Test runner creation
+puts "\n5️⃣  Testing Runner Creation"
+puts "-" * 30
+
+begin
+  health_runner = ApiSmokeTestFramework::HealthCheckTestRunner.new
+  auth_runner = ApiSmokeTestFramework::AuthenticationTestRunner.new
+  resource_runner = ApiSmokeTestFramework::ResourceTestRunner.new
+  
+  puts "✅ Health Check Runner created"
+  puts "✅ Authentication Runner created"
+  puts "✅ Resource Runner created"
+rescue => e
+  puts "❌ Runner creation failed: #{e.message}"
+end
+
+puts "\n📊 Test Summary"
+puts "=" * 30
+
+total_endpoints = endpoints.length
+expected_minimum = 15 # We mocked 18 routes
+
+if total_endpoints >= expected_minimum
+  puts "✅ Endpoint discovery working (#{total_endpoints} endpoints found)"
+else
+  puts "❌ Endpoint discovery issue (only #{total_endpoints} endpoints found, expected at least #{expected_minimum})"
+end
+
+if categories.keys.length >= 6
+  puts "✅ Category classification working (#{categories.keys.length} categories)"
+else
+  puts "❌ Category classification issue (only #{categories.keys.length} categories found)"
+end
+
+puts "\n🎉 Rails Integration Test Complete!"
+puts "\nNext steps to test with real Rails environment:"
+puts "1. Start Rails server: cd backend && rails server -p 3001"
+puts "2. Run actual smoke tests: rake smoke_test:all"
+puts "3. Test endpoint discovery: rake smoke_test:discover"
