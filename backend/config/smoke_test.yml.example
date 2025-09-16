@@ -1,0 +1,89 @@
+# API Smoke Test Framework Configuration
+# Copy this file to config/smoke_test.yml and customize as needed
+
+default: &default
+  base_url: http://localhost:3001
+  timeout: 30
+  max_retries: 3
+  retry_delay: 1
+  
+  # Test categories to run (empty means all)
+  categories: []
+    # - health_check
+    # - authentication
+    # - list_resource
+    # - get_resource
+    # - create_resource
+    # - update_resource
+    # - delete_resource
+    # - custom_action
+  
+  # Authentication configuration
+  auth:
+    enabled: true
+    test_credentials:
+      email: test@example.com
+      password: password123
+    
+  # Response validation settings
+  validation:
+    check_content_type: true
+    check_response_structure: true
+    expected_content_types:
+      - application/json
+      - text/html
+    
+  # Performance thresholds (in milliseconds)
+  performance:
+    max_response_time: 5000
+    health_check_max_time: 1000
+    auth_max_time: 2000
+    
+  # Logging configuration
+  logging:
+    level: INFO
+    include_request_body: false
+    include_response_body: false
+    
+  # Report settings
+  reports:
+    auto_generate: true
+    formats:
+      - text
+      - json
+    save_location: tmp/smoke_test_reports
+    
+development:
+  <<: *default
+  base_url: http://localhost:3001
+  logging:
+    level: DEBUG
+    include_request_body: true
+
+test:
+  <<: *default
+  base_url: http://localhost:3001
+  timeout: 10
+  logging:
+    level: WARN
+    
+staging:
+  <<: *default
+  base_url: https://staging-api.digitalfreight.com
+  timeout: 60
+  performance:
+    max_response_time: 10000
+    
+production:
+  <<: *default
+  base_url: https://api.digitalfreight.com
+  timeout: 60
+  categories:
+    - health_check
+    - authentication
+  performance:
+    max_response_time: 3000
+  logging:
+    level: WARN
+    include_request_body: false
+    include_response_body: false
