@@ -87,6 +87,46 @@ namespace :smoke_test do
     Rake::Task['smoke_test:category'].invoke('authentication')
   end
 
+  desc "Run analytics tests only"
+  task analytics: :environment do
+    Rake::Task['smoke_test:category'].invoke('analytics')
+  end
+
+  desc "Run performance tests"
+  task performance: :environment do
+    puts "🚀 Running Performance Tests"
+    puts "=" * 30
+    
+    orchestrator = ApiSmokeTestFramework::SmokeTestOrchestrator.new
+    orchestrator.discover_endpoints
+    results = orchestrator.run_category_tests(:performance)
+    
+    if results.empty?
+      puts "No dedicated performance endpoints found. Testing health endpoints for performance..."
+      # Test health endpoints with performance runner
+      health_endpoints = orchestrator.instance_variable_get(:@endpoints).select { |ep| ep[:category] == :health_check }
+      
+      performance_runner = ApiSmokeTestFramework::PerformanceTestRunner.new
+      results = health_endpoints.map do |endpoint|
+        performance_runner.run_test(endpoint, { iterations: 5 })
+      end
+    end
+    
+    puts "\nPerformance Results:"
+    puts "-" * 25
+    
+    results.each do |result|
+      endpoint = result[:endpoint]
+      puts "#{endpoint[:method].upcase} #{endpoint[:path]}"
+      puts "  Avg Response: #{result[:response_time_ms]}ms"
+      puts "  Success Rate: #{result[:success_rate] || 'N/A'}%"
+      if result[:min_response_time] && result[:max_response_time]
+        puts "  Range: #{result[:min_response_time]}ms - #{result[:max_response_time]}ms"
+      end
+      puts ""
+    end
+  end
+
   desc "Generate HTML report for the last test run"
   task :report, [:format] => :environment do |_task, args|
     format = (args[:format] || 'html').to_sym

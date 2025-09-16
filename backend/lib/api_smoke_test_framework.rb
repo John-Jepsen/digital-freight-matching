@@ -4,6 +4,7 @@ require 'net/http'
 require 'uri'
 require 'json'
 require 'logger'
+require 'date'
 
 # Main API Smoke Testing Framework
 # Provides comprehensive testing of API endpoints with different test strategies
@@ -64,8 +65,10 @@ module ApiSmokeTestFramework
         :health_check
       when path.include?('auth') || controller&.include?('auth')
         :authentication
-      when path.include?('analytics')
+      when path.include?('analytics') || path.include?('reports') || path.include?('metrics')
         :analytics
+      when path.include?('performance') || path.include?('load_test')
+        :performance
       when route.verb.match?(/GET/i) && action == 'index'
         :list_resource
       when route.verb.match?(/GET/i) && action == 'show'
@@ -91,6 +94,12 @@ module ApiSmokeTestFramework
 
     def make_request(method, path, options = {})
       uri = URI.join(@base_uri, path)
+      
+      # Add query parameters if provided
+      if options[:query_params] && !options[:query_params].empty?
+        query_string = URI.encode_www_form(options[:query_params])
+        uri.query = uri.query ? "#{uri.query}&#{query_string}" : query_string
+      end
       
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'

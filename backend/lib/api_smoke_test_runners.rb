@@ -8,9 +8,13 @@ module ApiSmokeTestFramework
     def initialize(http_client)
       @http_client = http_client
       @tokens = {}
+      @last_auth_attempt = nil
     end
 
     def authenticate_user(credentials = {})
+      # Avoid repeated auth attempts within short timeframe
+      return cached_token_response if recently_authenticated?
+      
       # Try to get auth token for API testing
       default_credentials = {
         email: 'test@example.com',
@@ -18,14 +22,33 @@ module ApiSmokeTestFramework
       }
       
       auth_data = credentials.merge(default_credentials)
+      @last_auth_attempt = Time.now
       
       response = @http_client.make_request('POST', '/api/v1/auth/login', {
         body: auth_data.to_json
       })
 
       if response[:success] && response[:body].is_a?(Hash)
-        token = response[:body]['token'] || response[:body]['access_token']
+        token = extract_token_from_response(response[:body])
         @tokens[:user] = token if token
+      end
+
+      response
+    end
+
+    def authenticate_admin(credentials = {})
+      admin_credentials = {
+        email: 'admin@example.com',
+        password: 'admin123'
+      }.merge(credentials)
+      
+      response = @http_client.make_request('POST', '/api/v1/admin/auth/login', {
+        body: admin_credentials.to_json
+      })
+
+      if response[:success] && response[:body].is_a?(Hash)
+        token = extract_token_from_response(response[:body])
+        @tokens[:admin] = token if token
       end
 
       response
@@ -38,6 +61,52 @@ module ApiSmokeTestFramework
     def authenticated_request_options(type = :user)
       token = get_token(type)
       token ? { auth_token: token } : {}
+    end
+
+    def clear_tokens
+      @tokens.clear
+    end
+
+    def has_valid_token?(type = :user)
+      !@tokens[type].nil? && !@tokens[type].empty?
+    end
+
+    private
+
+    def recently_authenticated?
+      @last_auth_attempt && (Time.now - @last_auth_attempt) < 30
+    end
+
+    def cached_token_response
+      {
+        status: 200,
+        success: true,
+        body: { token: @tokens[:user] },
+        cached: true
+      }
+    end
+
+    def extract_token_from_response(body)
+      # Try different possible token field names
+      token_fields = %w[token access_token jwt auth_token authentication_token]
+      token_fields.each do |field|
+        return body[field] if body[field]
+      end
+      
+      # Check nested structures
+      if body['data'] && body['data'].is_a?(Hash)
+        token_fields.each do |field|
+          return body['data'][field] if body['data'][field]
+        end
+      end
+      
+      if body['user'] && body['user'].is_a?(Hash)
+        token_fields.each do |field|
+          return body['user'][field] if body['user'][field]
+        end
+      end
+      
+      nil
     end
   end
 
@@ -82,8 +151,8 @@ module ApiSmokeTestFramework
     protected
 
     def execute_test(endpoint, options)
-      # Override in subclasses
-      raise NotImplementedError
+      # Default implementation for basic HTTP request
+      @http_client.make_request(endpoint[:method], endpoint[:path], options)
     end
 
     def evaluate_response(response, endpoint)
@@ -284,7 +353,7 @@ module ApiSmokeTestFramework
 
     def generate_test_data(controller, update: false)
       case controller
-      when 'api/v1/loads'
+      when 'api/v1/loads', 'api/loads'
         {
           load: {
             pickup_location: "Dallas, TX",
@@ -294,31 +363,76 @@ module ApiSmokeTestFramework
             weight: 1000,
             price: 500,
             description: "Test load for smoke testing",
-            equipment_type: "dry_van"
+            equipment_type: "dry_van",
+            status: update ? "in_transit" : "posted"
           }
         }
-      when 'api/v1/carriers'
+      when 'api/v1/carriers', 'api/carriers'
         {
           carrier: {
             company_name: "Test Carrier #{Time.now.to_i}",
             phone: "555-0123",
-            equipment_types: ["dry_van"],
-            service_areas: ["TX", "OK"]
+            email: "carrier#{Time.now.to_i}@example.com",
+            equipment_types: ["dry_van", "flatbed"],
+            service_areas: ["TX", "OK", "LA"],
+            rating: 4.5,
+            capacity: 53
           }
         }
-      when 'api/v1/users'
+      when 'api/v1/users', 'api/users'
         unique_id = Time.now.to_i
         {
           user: {
             email: "testuser#{unique_id}@example.com",
             first_name: "Test",
             last_name: "User",
-            role: "shipper"
+            role: "shipper",
+            phone: "555-0199",
+            company: "Test Company #{unique_id}"
+          }
+        }
+      when 'api/v1/shipments', 'api/shipments'
+        {
+          shipment: {
+            load_id: 1,
+            carrier_id: 1,
+            status: update ? "delivered" : "assigned",
+            pickup_datetime: Time.now.strftime('%Y-%m-%dT%H:%M:%S%z'),
+            notes: "Test shipment for smoke testing"
+          }
+        }
+      when 'api/v1/matching', 'api/matching'
+        {
+          matching_request: {
+            load_id: 1,
+            max_distance: 100,
+            min_rating: 3.0,
+            equipment_types: ["dry_van"],
+            priority: "normal"
+          }
+        }
+      when 'api/v1/vehicles', 'api/vehicles'
+        {
+          vehicle: {
+            carrier_id: 1,
+            equipment_type: "dry_van",
+            capacity_weight: 80000,
+            capacity_volume: 3500,
+            year: 2020,
+            make: "Freightliner",
+            model: "Cascadia",
+            vin: "1FUJGHDV#{Time.now.to_i}".slice(0, 17),
+            license_plate: "TX#{Time.now.to_i}".slice(-8..-1)
           }
         }
       else
         # Generic test data
-        { test: true, timestamp: Time.now.strftime('%Y-%m-%dT%H:%M:%S%z') }
+        { 
+          test: true, 
+          timestamp: Time.now.strftime('%Y-%m-%dT%H:%M:%S%z'),
+          name: "Test #{controller.split('/').last.capitalize} #{Time.now.to_i}",
+          description: "Generated test data for smoke testing"
+        }
       end
     end
 
@@ -338,6 +452,101 @@ module ApiSmokeTestFramework
       else
         response[:success]
       end
+    end
+  end
+
+  # Analytics test runner for analytics and reporting endpoints
+  class AnalyticsTestRunner < BaseTestRunner
+    def execute_test(endpoint, options)
+      # Analytics endpoints often require authentication and may have date ranges
+      auth_options = @auth_manager.authenticated_request_options
+      
+      # Add some query parameters that analytics endpoints commonly expect
+      analytics_params = generate_analytics_params(endpoint)
+      combined_options = auth_options.merge(analytics_params).merge(options)
+      
+      @http_client.make_request(endpoint[:method], endpoint[:path], combined_options)
+    end
+
+    private
+
+    def generate_analytics_params(endpoint)
+      # Common analytics parameters
+      params = {}
+      
+      # Add date range for most analytics endpoints
+      if endpoint[:path].include?('analytics') || endpoint[:path].include?('reports')
+        end_date = Date.current
+        start_date = end_date - 30.days
+        
+        params[:query_params] = {
+          start_date: start_date.strftime('%Y-%m-%d'),
+          end_date: end_date.strftime('%Y-%m-%d'),
+          limit: 100
+        }
+      end
+      
+      params
+    end
+
+    def evaluate_response(response, endpoint)
+      # Analytics endpoints should return data structures
+      return false unless response[:success]
+      return false unless [200, 204].include?(response[:status])
+      
+      # Check for common analytics response patterns
+      if response[:body].is_a?(Hash)
+        # Look for data arrays, metrics, or analytics-specific keys
+        analytics_indicators = %w[data metrics analytics results summary stats]
+        return analytics_indicators.any? { |key| response[:body].key?(key) }
+      end
+      
+      true
+    end
+  end
+
+  # Performance test runner for load testing and performance monitoring
+  class PerformanceTestRunner < BaseTestRunner
+    def execute_test(endpoint, options)
+      # Run multiple requests to test performance
+      test_iterations = options[:iterations] || 3
+      results = []
+      
+      auth_options = @auth_manager.authenticated_request_options
+      combined_options = auth_options.merge(options)
+      
+      test_iterations.times do |i|
+        start_time = Time.now
+        response = @http_client.make_request(endpoint[:method], endpoint[:path], combined_options)
+        end_time = Time.now
+        
+        results << {
+          iteration: i + 1,
+          response_time_ms: ((end_time - start_time) * 1000).round(2),
+          status: response[:status],
+          success: response[:success]
+        }
+      end
+      
+      # Return aggregate results
+      successful_requests = results.select { |r| r[:success] }
+      response_times = successful_requests.map { |r| r[:response_time_ms] }
+      
+      {
+        status: results.last[:status],
+        success: successful_requests.length > 0,
+        response_time_ms: response_times.empty? ? 0 : (response_times.sum / response_times.length).round(2),
+        iterations: test_iterations,
+        success_rate: (successful_requests.length.to_f / test_iterations * 100).round(2),
+        min_response_time: response_times.min || 0,
+        max_response_time: response_times.max || 0,
+        performance_results: results
+      }
+    end
+
+    def evaluate_response(response, endpoint)
+      # Performance tests pass if we get any successful responses
+      response[:success] && response[:success_rate] && response[:success_rate] > 0
     end
   end
 end
