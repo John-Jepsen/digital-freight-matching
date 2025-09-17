@@ -4,6 +4,7 @@ import RateLimitDashboard from './components/RateLimitDashboard';
 import APITester from './components/APITester';
 import LiveMetrics from './components/LiveMetrics';
 import Navigation from './components/Navigation';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export type TabType = 'dashboard' | 'tester' | 'metrics';
 
@@ -51,7 +52,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
       <motion.header
         initial={{ y: -100 }}
@@ -143,7 +145,8 @@ function App() {
           </div>
         </div>
       </motion.footer>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 
