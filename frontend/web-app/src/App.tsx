@@ -5,6 +5,7 @@ import APITester from './components/APITester';
 import LiveMetrics from './components/LiveMetrics';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
+import SkipLink from './components/SkipLink';
 
 export type TabType = 'dashboard' | 'tester' | 'metrics';
 
@@ -53,6 +54,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <SkipLink href="#main-content">Skip to main content</SkipLink>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
       <motion.header
@@ -91,7 +93,7 @@ function App() {
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
             <motion.div

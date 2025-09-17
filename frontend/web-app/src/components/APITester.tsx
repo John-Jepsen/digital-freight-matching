@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { apiConfig, logger } from '../config';
 
 interface TestResult {
   endpoint: string;
@@ -66,10 +67,13 @@ const APITester: React.FC = () => {
     try {
       const config = {
         method: test.method,
-        url: `http://localhost:3001${test.endpoint}`,
+        url: `${apiConfig.baseUrl}${test.endpoint}`,
         headers: test.headers || {},
+        timeout: apiConfig.timeout,
         ...(test.body && { data: test.body })
       };
+
+      logger.debug('Executing API test:', config);
 
       const response = await axios(config);
       const responseTime = Date.now() - startTime;
@@ -131,10 +135,13 @@ const APITester: React.FC = () => {
 
       const config = {
         method: customMethod,
-        url: customEndpoint.startsWith('http') ? customEndpoint : `http://localhost:3001${customEndpoint}`,
+        url: customEndpoint.startsWith('http') ? customEndpoint : `${apiConfig.baseUrl}${customEndpoint}`,
         headers,
+        timeout: apiConfig.timeout,
         ...(body && { data: body })
       };
+
+      logger.debug('Executing custom API test:', config);
 
       const response = await axios(config);
       const responseTime = Date.now() - startTime;
