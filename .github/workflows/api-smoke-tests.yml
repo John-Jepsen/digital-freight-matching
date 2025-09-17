@@ -1,0 +1,209 @@
+name: API Smoke Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run smoke tests every 4 hours in production
+    - cron: '0 */4 * * *'
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: freight_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.2
+        bundler-cache: true
+        working-directory: backend
+
+    - name: Set up database
+      run: |
+        cd backend
+        bundle exec rails db:create
+        bundle exec rails db:migrate
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/freight_test
+
+    - name: Start Rails server
+      run: |
+        cd backend
+        bundle exec rails server -p 3001 -e test &
+        sleep 10
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/freight_test
+
+    - name: Wait for server to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -f http://localhost:3001/api/v1/health; then
+            echo "Server is ready"
+            break
+          fi
+          echo "Waiting for server... ($i/30)"
+          sleep 2
+        done
+
+    - name: Run API Smoke Tests
+      run: |
+        cd backend
+        bundle exec rake smoke_test:all
+      env:
+        SMOKE_TEST_BASE_URL: http://localhost:3001
+        SMOKE_TEST_TIMEOUT: 30
+
+    - name: Run Health Check Validation
+      run: |
+        cd backend
+        bundle exec rake smoke_test:validate
+      env:
+        SMOKE_TEST_BASE_URL: http://localhost:3001
+
+    - name: Generate Smoke Test Report
+      if: always()
+      run: |
+        cd backend
+        bundle exec rake smoke_test:report[html]
+        bundle exec rake smoke_test:report[json]
+
+    - name: Upload Test Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-test-reports
+        path: |
+          backend/smoke_test_report_*.html
+          backend/smoke_test_report_*.json
+        retention-days: 30
+
+    - name: Comment PR with Test Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const reports = fs.readdirSync('backend').filter(f => f.startsWith('smoke_test_report_') && f.endsWith('.json'));
+            if (reports.length > 0) {
+              const report = JSON.parse(fs.readFileSync(`backend/${reports[0]}`, 'utf8'));
+              const summary = report.summary;
+              
+              const body = `## 🔥 API Smoke Test Results
+              
+              | Metric | Value |
+              |--------|-------|
+              | Total Tests | ${summary.total_tests} |
+              | Passed | ${summary.passed_count} ✅ |
+              | Failed | ${summary.failed_count} ❌ |
+              | Success Rate | ${summary.success_rate}% |
+              | Total Duration | ${summary.total_duration_ms}ms |
+              
+              ${summary.failed_count > 0 ? '⚠️ Some tests failed. Please check the detailed reports.' : '🎉 All smoke tests passed!'}
+              
+              [View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+          } catch (error) {
+            console.log('Could not parse smoke test results:', error);
+          }
+
+    - name: Fail build if critical tests failed
+      run: |
+        cd backend
+        # Check if health checks passed
+        if ! bundle exec rake smoke_test:health; then
+          echo "❌ Health checks failed - failing build"
+          exit 1
+        fi
+        echo "✅ Critical smoke tests passed"
+      env:
+        SMOKE_TEST_BASE_URL: http://localhost:3001
+
+  # Scheduled production smoke tests (only on main branch)
+  production-smoke-tests:
+    if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.2
+        bundler-cache: true
+        working-directory: backend
+
+    - name: Run Production Health Checks
+      run: |
+        cd backend
+        bundle exec rake smoke_test:health
+      env:
+        SMOKE_TEST_BASE_URL: ${{ secrets.PRODUCTION_API_URL }}
+        SMOKE_TEST_TIMEOUT: 60
+
+    - name: Run Production Authentication Tests
+      run: |
+        cd backend
+        bundle exec rake smoke_test:category[authentication]
+      env:
+        SMOKE_TEST_BASE_URL: ${{ secrets.PRODUCTION_API_URL }}
+        SMOKE_TEST_TIMEOUT: 60
+
+    - name: Notify on Production Issues
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Production API Smoke Tests Failed',
+            body: `Production API smoke tests failed at ${new Date().toISOString()}.
+            
+            Please investigate immediately:
+            - Check production API health
+            - Review recent deployments
+            - Check monitoring dashboards
+            
+            [View failed workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+            labels: ['bug', 'production', 'urgent']
+          });
