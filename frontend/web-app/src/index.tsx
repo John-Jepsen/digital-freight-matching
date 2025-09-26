@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { enableAxiosMocks } from './mocks/browser';
+
+// Toggle mocks via env
+if (process.env.REACT_APP_USE_MOCKS === 'true') {
+  enableAxiosMocks();
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

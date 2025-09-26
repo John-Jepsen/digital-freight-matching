@@ -14,7 +14,7 @@ class MatchingAlgorithmService
         # Performance monitoring
         start_time = Time.current
         
-        # Get all active carriers with preloaded associations to avoid N+1
+        # Get all active carriers with preloaded associations 
         carriers_scope = Carrier.active.verified.includes(
           :user,
           vehicles: [:driver],
