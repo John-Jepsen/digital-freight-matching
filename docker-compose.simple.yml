@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Simplified docker-compose for current workspace structure
 # This only includes services that actually exist in the workspace
@@ -177,11 +177,11 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
     networks:
       - freight_network
 
@@ -202,11 +202,16 @@ services:
     build:
       context: ./frontend/web-app
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: http://localhost:3000
+        REACT_APP_USE_MOCKS: "true"
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
     container_name: freight_web_frontend
     ports:
       - "3002:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_USE_MOCKS=true
       - REACT_APP_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
     depends_on:
       - freight_api

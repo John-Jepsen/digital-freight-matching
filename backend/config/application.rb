@@ -48,8 +48,9 @@ module Backend
     config.monitoring.business_metrics_collection_interval = 5.minutes
     
     # Track application start time for uptime calculations
-    config.after_initialize do
-      Rails.application.started_at = Time.current
+    initializer :set_started_at do
+      start_time = Time.current
+      config.x.started_at = start_time
     end
   end
 end

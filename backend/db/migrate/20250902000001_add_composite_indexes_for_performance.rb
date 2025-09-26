@@ -1,4 +1,4 @@
-class AddCompositeIndexesForPerformance < ActiveRecord::Migration[8.0]
+class AddCompositeIndexesForPerformance < ActiveRecord::Migration[7.1]
   def change
     # Composite indexes for common load search patterns
     # Used in LoadSearchService for filtering available loads

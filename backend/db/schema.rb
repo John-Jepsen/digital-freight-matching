@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_02_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -69,8 +69,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
     t.datetime "updated_at", null: false
     t.index ["company_name"], name: "index_carriers_on_company_name"
     t.index ["dot_number"], name: "index_carriers_on_dot_number", unique: true
+    t.index ["is_active", "is_verified", "safety_rating"], name: "idx_carriers_active_verified_rating"
     t.index ["is_active"], name: "index_carriers_on_is_active"
     t.index ["is_verified"], name: "index_carriers_on_is_verified"
+    t.index ["latitude", "longitude", "is_active"], name: "idx_carriers_location_active"
     t.index ["latitude", "longitude"], name: "index_carriers_on_latitude_and_longitude"
     t.index ["mc_number"], name: "index_carriers_on_mc_number", unique: true
     t.index ["safety_rating"], name: "index_carriers_on_safety_rating"
@@ -110,6 +112,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["carrier_id", "driver_number"], name: "index_drivers_on_carrier_id_and_driver_number", unique: true
+    t.index ["carrier_id", "status", "is_hazmat_certified"], name: "idx_drivers_carrier_status_hazmat"
+    t.index ["carrier_id", "status", "is_team_driver"], name: "idx_drivers_carrier_status_team"
     t.index ["carrier_id"], name: "index_drivers_on_carrier_id"
     t.index ["is_hazmat_certified"], name: "index_drivers_on_is_hazmat_certified"
     t.index ["is_team_driver"], name: "index_drivers_on_is_team_driver"
@@ -213,11 +217,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
     t.index ["is_expedited"], name: "index_loads_on_is_expedited"
     t.index ["is_hazmat"], name: "index_loads_on_is_hazmat"
     t.index ["pickup_date"], name: "index_loads_on_pickup_date"
+    t.index ["pickup_latitude", "pickup_longitude", "status"], name: "idx_loads_pickup_location_status"
     t.index ["pickup_latitude", "pickup_longitude"], name: "index_loads_on_pickup_latitude_and_pickup_longitude"
     t.index ["pickup_state"], name: "index_loads_on_pickup_state"
     t.index ["posted_at"], name: "index_loads_on_posted_at"
     t.index ["shipper_id", "reference_number"], name: "index_loads_on_shipper_id_and_reference_number", unique: true
     t.index ["shipper_id"], name: "index_loads_on_shipper_id"
+    t.index ["status", "equipment_type", "delivery_state"], name: "idx_loads_status_equipment_delivery_state"
+    t.index ["status", "equipment_type", "pickup_state"], name: "idx_loads_status_equipment_pickup_state"
+    t.index ["status", "pickup_date", "expires_at"], name: "idx_loads_status_pickup_expires"
     t.index ["status"], name: "index_loads_on_status"
     t.index ["temperature_controlled"], name: "index_loads_on_temperature_controlled"
   end
@@ -273,8 +281,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["accepted_at"], name: "index_matches_on_accepted_at"
+    t.index ["carrier_id", "status", "match_score"], name: "idx_matches_carrier_status_score"
     t.index ["carrier_id"], name: "index_matches_on_carrier_id"
     t.index ["load_id", "carrier_id"], name: "index_matches_on_load_id_and_carrier_id", unique: true
+    t.index ["load_id", "status", "matched_at"], name: "idx_matches_load_status_matched_at"
     t.index ["load_id"], name: "index_matches_on_load_id"
     t.index ["match_score"], name: "index_matches_on_match_score"
     t.index ["matched_at"], name: "index_matches_on_matched_at"
@@ -457,15 +467,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_29_000001) do
     t.boolean "is_team_capable", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["carrier_id", "equipment_type", "status"], name: "idx_vehicles_carrier_equipment_status"
     t.index ["carrier_id", "vehicle_number"], name: "index_vehicles_on_carrier_id_and_vehicle_number", unique: true
     t.index ["carrier_id"], name: "index_vehicles_on_carrier_id"
     t.index ["current_location_lat", "current_location_lng"], name: "idx_on_current_location_lat_current_location_lng_b3fbcf9829"
     t.index ["driver_id"], name: "index_vehicles_on_driver_id"
+    t.index ["equipment_type", "capacity_weight", "status"], name: "idx_vehicles_equipment_capacity_status"
     t.index ["equipment_type"], name: "index_vehicles_on_equipment_type"
     t.index ["inspection_due_date"], name: "index_vehicles_on_inspection_due_date"
     t.index ["is_hazmat_certified"], name: "index_vehicles_on_is_hazmat_certified"
     t.index ["is_temperature_controlled"], name: "index_vehicles_on_is_temperature_controlled"
     t.index ["maintenance_due_date"], name: "index_vehicles_on_maintenance_due_date"
+    t.index ["status", "is_hazmat_certified", "is_temperature_controlled"], name: "idx_vehicles_status_hazmat_temp"
     t.index ["status"], name: "index_vehicles_on_status"
     t.index ["vin"], name: "index_vehicles_on_vin", unique: true
   end

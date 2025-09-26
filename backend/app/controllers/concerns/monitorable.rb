@@ -37,10 +37,8 @@ module Monitorable
     
     # Track response time
     Yabeda.freight_app.api_response_time_seconds.measure(
-      duration,
-      controller: controller_name,
-      action: action_name,
-      status: status
+      { controller: controller_name, action: action_name, status: status },
+      duration
     )
     
     # Track total API requests
@@ -70,10 +68,8 @@ module Monitorable
     
     # Track response time even for errors
     Yabeda.freight_app.api_response_time_seconds.measure(
-      duration,
-      controller: controller_name,
-      action: action_name, 
-      status: status
+      { controller: controller_name, action: action_name, status: status },
+      duration
     )
     
     # Track API request errors
@@ -119,6 +115,11 @@ module Monitorable
   
   # Track application errors and categorize them
   def track_application_error(error)
+    # Avoid double render/redirect scenarios
+    return if error.is_a?(AbstractController::DoubleRenderError)
+    return if defined?(performed?) && performed?
+    return if response.respond_to?(:committed?) && response.committed?
+
     case error
     when ActiveRecord::RecordNotFound
       render_not_found_error(error)
@@ -155,8 +156,8 @@ module Monitorable
       load_type = params[:load][:load_type] || 'standard'
       
       Yabeda.freight_app.load_value_dollars.measure(
-        load_value,
-        load_type: load_type
+        { load_type: load_type },
+        load_value
       )
     end
   end
@@ -255,6 +256,9 @@ module Monitorable
   end
   
   def render_internal_server_error(error)
+    return if defined?(performed?) && performed?
+    return if response.respond_to?(:committed?) && response.committed?
+
     Rails.logger.error "Internal server error: #{error.message}"
     Rails.logger.error error.backtrace.join("\n") if Rails.env.development?
     
@@ -263,32 +267,5 @@ module Monitorable
       message: Rails.env.development? ? error.message : 'An unexpected error occurred'
     }, status: :internal_server_error
   end
-end
-=======
-# app/controllers/concerns/monitorable.rb
-module Monitorable
-  extend ActiveSupport::Concern
-
-  included do
-    around_action :track_request_metrics
-    rescue_from StandardError, with: :track_error
-  end
-
-  private
-
-def track_request_metrics
-  start = Time.now
-  yield
-  duration = Time.now - start
-  RESPONSE_TIME.observe({ method: request.method, path: request.path }, duration)
-  REQUEST_COUNTER.increment
-end
-
-def track_error(exception)
-  ERROR_COUNTER.increment
-  Rails.logger.error("❌ Error tracked: #{exception.message}")
-  raise exception
-end
-
 end
 
