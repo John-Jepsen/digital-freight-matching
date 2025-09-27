@@ -8,6 +8,16 @@
 # Database credentials and configuration
 config/database.yml
 config/secrets.yml
+**/config/local_env.yml
+**/config/local_env.yaml
+**/config/*.local.yml
+**/config/*.local.yaml
+**/config/*.local.json
+**/config/*.local.rb
+**/config/*_local.yml
+**/config/*_local.yaml
+**/config/*_local.json
+**/config/smoke_test.yml
 
 # Application logs
 *.log
