@@ -1,0 +1,65 @@
+name: Validate Mermaid Diagrams
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/validate-diagrams.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/validate-diagrams.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install mermaid-cli
+        run: npm install -g @mermaid-js/mermaid-cli@10.9.1
+
+      - name: Find markdown files with Mermaid blocks
+        id: find
+        run: |
+          mapfile -t files < <(grep -rl --include='*.md' '```mermaid' . || true)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No Mermaid diagrams found."
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf '%s\n' "${files[@]}" > .mermaid-files.txt
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+          echo "Found ${#files[@]} markdown file(s) containing Mermaid blocks:"
+          cat .mermaid-files.txt
+
+      - name: Render Mermaid blocks (syntax validation)
+        if: steps.find.outputs.count != '0'
+        run: |
+          mkdir -p .mermaid-out
+          fail=0
+          while IFS= read -r md; do
+            echo "::group::Validating $md"
+            if ! mmdc -i "$md" -o ".mermaid-out/$(echo "$md" | tr '/' '_').svg" --quiet; then
+              echo "::error file=$md::Mermaid syntax error in $md"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done < .mermaid-files.txt
+          exit $fail
+
+      - name: Upload rendered diagrams
+        if: steps.find.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-diagrams
+          path: .mermaid-out/
+          if-no-files-found: ignore

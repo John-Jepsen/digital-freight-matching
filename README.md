@@ -1,5 +1,61 @@
 # Digital Freight Matching Platform
 
+## System Diagram
+
+```mermaid
+flowchart TB
+    subgraph Clients["Client Applications"]
+        Web["React Web App<br/>(port 3000)"]
+        Admin["React Admin Dashboard<br/>(port 3002)"]
+        Mobile["React Native Carrier App<br/>(planned)"]
+    end
+
+    subgraph API["API Layer"]
+        Rails["Rails 8.0.2 API Gateway<br/>(port 3001)"]
+    end
+
+    subgraph Services["Business Services"]
+        Matching["Matching Engine"]
+        Routing["Route Optimization"]
+        Tracking["Real-time Tracking"]
+        Auth["Auth & Sessions"]
+    end
+
+    subgraph Data["Data Layer"]
+        PG[("PostgreSQL 16<br/>(port 5432)")]
+        Redis[("Redis 7<br/>Cache / Sessions<br/>(port 6379)")]
+    end
+
+    subgraph Ops["Observability & Ops"]
+        Prom["Prometheus"]
+        Graf["Grafana"]
+        Alert["Alertmanager"]
+        Docker["Docker Compose"]
+    end
+
+    Web --> Rails
+    Admin --> Rails
+    Mobile --> Rails
+
+    Rails --> Matching
+    Rails --> Routing
+    Rails --> Tracking
+    Rails --> Auth
+
+    Matching --> PG
+    Routing --> PG
+    Tracking --> PG
+    Auth --> Redis
+    Rails --> Redis
+
+    Rails -. metrics .-> Prom
+    Prom --> Graf
+    Prom --> Alert
+    Docker -. orchestrates .-> Rails
+    Docker -. orchestrates .-> PG
+    Docker -. orchestrates .-> Redis
+```
+
 A comprehensive digital freight matching system built with Ruby on Rails, designed to connect shippers, carriers, and brokers through intelligent algorithms, reducing deadhead trucking and optimizing freight logistics.
 
 
