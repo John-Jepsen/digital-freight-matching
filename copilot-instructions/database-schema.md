@@ -1,13 +1,13 @@
 # Database Schema & Data Management
 
-## 🗄️ Database Architecture Overview
+## Database Architecture Overview
 
 **System**: PostgreSQL 16 with PostGIS extensions  
 **ORM**: ActiveRecord (Rails)  
 **Security**: Row-Level Security (RLS), encrypted connections  
 **Extensions**: PostGIS for geographic data, JSONB for flexible storage  
 
-## 📊 Core Entity Relationships
+## Core Entity Relationships
 
 ### Primary Entities Structure
 ```
@@ -43,7 +43,7 @@ Match 1:1 Shipment
 Shipment 1:N TrackingEvent
 ```
 
-## 🏗️ Schema Design Patterns
+## Schema Design Patterns
 
 ### User Management System
 ```ruby
@@ -363,7 +363,7 @@ class CreateDrivers < ActiveRecord::Migration[8.0]
 end
 ```
 
-## 🔍 Query Optimization Strategies
+## Query Optimization Strategies
 
 ### Geographic Search Optimization
 ```sql
@@ -465,7 +465,7 @@ LEFT JOIN shipments s ON m.id = s.match_id
 GROUP BY cp.id, cp.company_name;
 ```
 
-## 🔐 Row-Level Security Implementation
+## Row-Level Security Implementation
 
 ### Security Policies
 ```sql
@@ -526,7 +526,7 @@ RETURNS INTEGER AS $$
 $$ LANGUAGE SQL STABLE;
 ```
 
-## 📊 Data Validation & Constraints
+## Data Validation & Constraints
 
 ### Business Logic Constraints
 ```sql
@@ -559,7 +559,7 @@ ALTER TABLE shipments ADD CONSTRAINT valid_progress_percentage
   CHECK (progress_percentage >= 0 AND progress_percentage <= 100);
 ```
 
-## 🗂️ Data Archival & Cleanup
+## Data Archival & Cleanup
 
 ### Automated Data Management
 ```sql

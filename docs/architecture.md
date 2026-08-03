@@ -2,7 +2,7 @@
 
 Comprehensive technical architecture documentation for the Digital Freight Matching Platform.
 
-## 🏗️ High-Level Architecture
+## High-Level Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -28,7 +28,7 @@ Comprehensive technical architecture documentation for the Digital Freight Match
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## 🧩 System Components
+## System Components
 
 ### Frontend Applications
 
@@ -66,9 +66,9 @@ Comprehensive technical architecture documentation for the Digital Freight Match
 - **Purpose**: Session storage, caching, background jobs
 - **Port**: 6379
 
-## 🔄 Architecture Evolution Strategy
+## Architecture Evolution Strategy
 
-### Current: Modular Monolith (Phase 1) ✅
+### Current: Modular Monolith (Phase 1)
 
 **Rationale**: 
 - Faster initial development
@@ -87,7 +87,7 @@ backend/
 │   └── channels/              # Real-time features
 ```
 
-### Future: Microservices (Phase 3) 📝
+### Future: Microservices (Phase 3)
 
 **Planned Services**:
 1. **User Service**: Authentication and profile management
@@ -97,7 +97,7 @@ backend/
 5. **Notification Service**: Alerts and communications
 6. **Analytics Service**: Reporting and business intelligence
 
-## 🏛️ Rails Application Structure
+## Rails Application Structure
 
 ### Models (Data Layer)
 
@@ -144,7 +144,7 @@ Match                  # Load-carrier matches
 └── analytics/         # Dashboard data
 ```
 
-## 🔐 Security Architecture
+## Security Architecture
 
 ### Authentication & Authorization
 - **JWT Tokens**: Stateless authentication
@@ -163,7 +163,7 @@ Match                  # Load-carrier matches
 - **SQL Injection Protection**: ActiveRecord ORM
 - **Audit Logging**: Comprehensive activity tracking
 
-## 🚀 Deployment Architecture
+## Deployment Architecture
 
 ### Development Environment
 ```yaml
@@ -189,7 +189,7 @@ services:
 - Real-time error reporting
 - Business metrics dashboards
 
-## 📊 Data Flow Architecture
+## Data Flow Architecture
 
 ### Request Flow
 1. **Frontend** → API Gateway (Rails)
@@ -203,7 +203,7 @@ services:
 3. **Redis** for pub/sub messaging
 4. **Push notifications** for mobile updates
 
-## 🔧 Development Tools
+## Development Tools
 
 **Backend**:
 - Rails 8.0.2 with Ruby 3.2+

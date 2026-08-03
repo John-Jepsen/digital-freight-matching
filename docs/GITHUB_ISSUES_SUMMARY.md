@@ -23,13 +23,13 @@ For each issue below:
 ```markdown
 # API Rate Limiting Implementation
 
-## 🎯 Objective
+## Objective
 Implement comprehensive rate limiting for API endpoints to protect against abuse and ensure platform stability according to security guidelines.
 
-## 📋 Description
+## Description
 Based on the copilot instructions in `copilot-instructions/security-guidelines.md`, we need to implement rate limiting for API endpoints to prevent abuse and ensure system stability. The current Rails API lacks proper rate limiting mechanisms which is identified as a critical security requirement.
 
-## 🔧 Technical Requirements
+## Technical Requirements
 
 ### Implementation Scope
 - **Rate Limiting Gem**: Use `rack-attack` gem for Rails
@@ -57,7 +57,7 @@ Public GET endpoints: 20 per minute per IP
 POST /api/v1/matches: 5 per minute per authenticated user
 ```
 
-## ✅ Acceptance Criteria
+## Acceptance Criteria
 
 ### Core Implementation
 - [ ] Install and configure `rack-attack` gem in Rails application
@@ -86,18 +86,18 @@ POST /api/v1/matches: 5 per minute per authenticated user
 - [ ] Load testing to verify rate limits under pressure
 - [ ] Test rate limit bypass scenarios (admin users)
 
-## 📖 Reference Materials
+## Reference Materials
 - `copilot-instructions/security-guidelines.md` - Security implementation requirements
 - `copilot-instructions/api-patterns.md` - Standard API response formats
 - `copilot-instructions/development-guidelines.md` - Rails development standards
 
-## 🔄 Related Components
+## Related Components
 - **Backend**: `backend/config/application.rb`, `backend/config/initializers/`
 - **Security**: Integration with existing JWT authentication system
 - **Monitoring**: Redis metrics and application logs
 - **Documentation**: Update API documentation with rate limit information
 
-## 📊 Success Metrics
+## Success Metrics
 - Zero successful API abuse attempts after implementation
 - <1% of legitimate requests hit rate limits
 - Rate limit response time <10ms overhead
@@ -121,13 +121,13 @@ POST /api/v1/matches: 5 per minute per authenticated user
 ```markdown
 # Advanced Load Matching Algorithm Enhancement
 
-## 🎯 Objective
+## Objective
 Enhance the existing MatchingAlgorithmService to improve carrier-load matching accuracy and reduce deadhead miles by implementing advanced scoring algorithms.
 
-## 📋 Description
+## Description
 According to `copilot-instructions/business-logic.md` and the implementation status, the current MatchingAlgorithmService is complete but needs enhancement to achieve the target 25% reduction in deadhead miles. The algorithm should incorporate multiple business factors including distance, equipment compatibility, pricing, driver ratings, and historical performance.
 
-## 🔧 Technical Requirements
+## Technical Requirements
 
 ### Current Service Enhancement
 The existing `MatchingAlgorithmService` in `backend/app/services/` needs these improvements:
@@ -153,7 +153,7 @@ end
 - **Dynamic Pricing**: Adjust scoring based on market rates and demand
 - **Quality Metrics**: Factor in on-time delivery rates and shipper feedback
 
-## ✅ Acceptance Criteria
+## Acceptance Criteria
 
 ### Algorithm Enhancement
 - [ ] Implement multi-factor scoring system with configurable weights
@@ -190,20 +190,20 @@ end
 - [ ] A/B testing framework to compare algorithm versions
 - [ ] Validate 25% deadhead reduction target in test scenarios
 
-## 📖 Reference Materials
+## Reference Materials
 - `copilot-instructions/business-logic.md` - Core business entities and matching logic
 - `copilot-instructions/development-guidelines.md` - Service object patterns
 - `copilot-instructions/database-schema.md` - Entity relationships and indexes
 - `docs/implementation-status.md` - Current MatchingAlgorithmService status
 
-## 🔄 Related Components
+## Related Components
 - **Service**: `backend/app/services/matching_algorithm_service.rb`
 - **Models**: `Load`, `CarrierProfile`, `Vehicle`, `Match`
 - **Controllers**: `backend/app/controllers/api/v1/matching_controller.rb`
 - **Database**: PostGIS extensions, geographic indexes
 - **Testing**: `backend/spec/services/matching_algorithm_service_spec.rb`
 
-## 📊 Success Metrics
+## Success Metrics
 - 90%+ successful load-carrier matches (current target)
 - <30 seconds average matching response time
 - 25% reduction in deadhead miles for matched loads
@@ -228,13 +228,13 @@ end
 ```markdown
 # Real-time WebSocket Notifications System
 
-## 🎯 Objective
+## Objective
 Implement real-time WebSocket notifications for load updates, carrier matches, and shipment tracking to enhance user experience and operational efficiency.
 
-## 📋 Description
+## Description
 Based on `docs/implementation-status.md`, real-time WebSocket notifications are planned for Phase 3 but are critical for competitive freight matching. Users need instant notifications for load matches, bid updates, shipment status changes, and emergency situations. This system will replace polling-based updates with efficient real-time communication.
 
-## 🔧 Technical Requirements
+## Technical Requirements
 
 ### WebSocket Infrastructure
 - **ActionCable Integration**: Use Rails 8's built-in ActionCable for WebSocket handling
@@ -258,7 +258,7 @@ SystemAlertsChannel        # Platform-wide announcements
 - **Reconnection Logic**: Automatic reconnection with exponential backoff
 - **Offline Support**: Queue messages when connection is lost
 
-## ✅ Acceptance Criteria
+## Acceptance Criteria
 
 ### Backend Implementation
 - [ ] Configure ActionCable with Redis as the message broker
@@ -302,20 +302,20 @@ SystemAlertsChannel        # Platform-wide announcements
 - [ ] Load testing for concurrent connections (target: 1000+ users)
 - [ ] End-to-end tests for notification workflows
 
-## 📖 Reference Materials
+## Reference Materials
 - `copilot-instructions/development-guidelines.md` - Rails and React standards
 - `copilot-instructions/security-guidelines.md` - Authentication and authorization
 - `docs/implementation-status.md` - Phase 3 planned features
 - Rails ActionCable documentation
 
-## 🔄 Related Components
+## Related Components
 - **Backend**: ActionCable configuration, Redis setup
 - **Frontend**: React hooks, TypeScript types, notification components
 - **Security**: JWT authentication, Pundit authorization
 - **Infrastructure**: Redis scaling, WebSocket load balancing
 - **Monitoring**: Connection metrics, message delivery rates
 
-## 📊 Success Metrics
+## Success Metrics
 - Sub-second notification delivery for real-time updates
 - 99.9% message delivery reliability
 - Support for 1000+ concurrent WebSocket connections

@@ -2,14 +2,14 @@
 
 Comprehensive database schema and relationships for the Digital Freight Matching Platform.
 
-## 🗄️ Database Overview
+## Database Overview
 
 **Database System**: PostgreSQL 16  
 **ORM**: ActiveRecord (Rails)  
 **Extensions**: PostGIS (for geographic data), JSONB (for flexible data)  
 **Security**: Row-Level Security (RLS), encrypted connections  
 
-## 📊 Entity Relationship Diagram
+## Entity Relationship Diagram
 
 ```mermaid
 erDiagram
@@ -98,7 +98,7 @@ erDiagram
     }
 ```
 
-## 🏗️ Core Tables
+## Core Tables
 
 ### Users Table
 **Purpose**: Central authentication and user management
@@ -212,7 +212,7 @@ CREATE INDEX idx_loads_status_pickup_date ON loads(status, pickup_datetime);
 CREATE INDEX idx_loads_shipper_status ON loads(shipper_id, status);
 ```
 
-## 🔗 Relationship Tables
+## Relationship Tables
 
 ### Load Requirements
 **Purpose**: Special requirements for freight loads
@@ -291,7 +291,7 @@ CREATE INDEX idx_locations_city_state ON locations(city, state);
 CREATE INDEX idx_locations_zip_code ON locations(zip_code);
 ```
 
-## 🤝 Matching & Operations
+## Matching & Operations
 
 ### Matches Table
 **Purpose**: Load-to-carrier matching results
@@ -350,7 +350,7 @@ CHECK (
 );
 ```
 
-## 📍 Tracking & Shipments
+## Tracking & Shipments
 
 ### Shipments Table
 **Purpose**: Active shipment management
@@ -399,7 +399,7 @@ CREATE INDEX idx_tracking_events_occurred_at ON tracking_events(occurred_at DESC
 CREATE INDEX idx_tracking_events_event_type ON tracking_events(event_type);
 ```
 
-## 👥 Fleet Management
+## Fleet Management
 
 ### Vehicles Table
 **Purpose**: Carrier fleet management
@@ -455,7 +455,7 @@ CREATE INDEX idx_drivers_status ON drivers(status);
 CREATE INDEX idx_drivers_license_expiry ON drivers(license_expiry);
 ```
 
-## 🔍 Search Optimization
+## Search Optimization
 
 ### Full-Text Search
 **Setup for load search**:
@@ -514,7 +514,7 @@ WHERE l.status = 'posted'
 ORDER BY distance;
 ```
 
-## 📊 Performance Considerations
+## Performance Considerations
 
 ### Query Optimization
 **Common query patterns**:
@@ -554,7 +554,7 @@ DELETE FROM tracking_events
 WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '90 days';
 ```
 
-## 🔐 Security Features
+## Security Features
 
 ### Row-Level Security Examples
 ```sql

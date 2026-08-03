@@ -1,13 +1,13 @@
 # Copilot Instructions - Digital Freight Matching Platform
 
-## 🎯 Project Understanding
+## Project Understanding
 
 This is the **Digital Freight Matching Platform** - an AI-powered system that optimizes the trucking industry by reducing empty truck miles (deadhead) through intelligent load-to-carrier matching. The platform addresses a $50+ billion annual problem where 25-35% of truck miles are driven empty.
 
 ### Core Mission
 Transform freight logistics from reactive manual processes to proactive automated optimization, reducing operational costs by 10-15% and deadhead miles by 25%.
 
-## 📋 Coding Guidelines Summary
+## Coding Guidelines Summary
 
 ### Technology Stack
 - **Backend**: Ruby on Rails 8.0.2 API-only with PostgreSQL 16 + Redis
@@ -46,7 +46,7 @@ Transform freight logistics from reactive manual processes to proactive automate
 - **Audit logging** for all sensitive operations
 - **Rate limiting** for API endpoints
 
-## 🏗️ Architecture Context
+## Architecture Context
 
 ### Current State: Modular Monolith (Phase 1)
 - Rails API gateway handling all business logic
@@ -66,7 +66,7 @@ Transform freight logistics from reactive manual processes to proactive automate
 - **Performance Metrics**: On-time delivery, deadhead reduction, cost savings
 - **Compliance**: DOT/MC numbers, insurance requirements, driver certifications
 
-## 💡 When Writing Code
+## When Writing Code
 
 ### For Backend Development
 ```ruby
@@ -170,7 +170,7 @@ CREATE POLICY loads_access_policy ON loads
   );
 ```
 
-## 🔍 Key Business Context
+## Key Business Context
 
 ### Industry Knowledge
 - **Trucking economics**: $1.855 average cost per mile, 6.5 MPG fuel efficiency
@@ -186,7 +186,7 @@ CREATE POLICY loads_access_policy ON loads
 - **Uptime**: 99.9% system availability
 - **Response time**: <200ms for API endpoints
 
-## 🚨 Important Considerations
+## Important Considerations
 
 ### Security First
 - **Never** store sensitive data unencrypted
@@ -215,7 +215,7 @@ CREATE POLICY loads_access_policy ON loads
 - **Performance tests** for high-load scenarios
 - Maintain **85%+ test coverage**
 
-## 📖 Reference Materials
+## Reference Materials
 
 The `copilot-instructions/` folder contains detailed guidance:
 - `project-context.md` - Business problem and solution overview

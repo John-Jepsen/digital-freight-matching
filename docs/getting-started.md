@@ -2,13 +2,13 @@
 
 Get the Digital Freight Matching Platform running in under 5 minutes.
 
-## 🚀 Prerequisites
+## Prerequisites
 
 - **Docker & Docker Compose** (required)
 - **Node.js 18+** (for frontend development)
 - **Ruby 3.2+** (optional, for local backend development)
 
-## ⚡ One-Command Setup
+## One-Command Setup
 
 ```bash
 git clone https://github.com/John-Jepsen/digital-freight-matching.git
@@ -16,7 +16,7 @@ cd digital-freight-matching
 ./quick-start.sh
 ```
 
-## 🏃‍♂️ Development Startup Options
+## Development Startup Options
 
 ### Option A: Hybrid Development (Recommended)
 Best for active development with hot reload:
@@ -44,7 +44,7 @@ npm install && npm start
 docker compose up -d
 ```
 
-## 🌐 Access Points
+## Access Points
 
 | Service | URL | Purpose |
 |---------|-----|---------|
@@ -53,7 +53,7 @@ docker compose up -d
 | **Admin Dashboard** | http://localhost:3002 | Administrative interface |
 | **Health Check** | http://localhost:3001/api/v1/health | System status |
 
-## ✅ Verify Installation
+## Verify Installation
 
 1. **API Health Check**:
    ```bash
@@ -65,7 +65,7 @@ docker compose up -d
    - Visit http://localhost:3000 (should show React app)
    - Visit http://localhost:3002 (should show admin dashboard)
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -93,14 +93,14 @@ cd frontend/web-app && rm -rf node_modules && npm install
 cd frontend/admin-dashboard && rm -rf node_modules && npm install
 ```
 
-## 🛠️ Development Workflow
+## Development Workflow
 
 1. **Make backend changes**: Edit files in `backend/`, Rails will auto-reload
 2. **Make frontend changes**: Edit files in `frontend/*/src/`, React will hot-reload
 3. **Database changes**: Run `rails db:migrate` in backend directory
 4. **Add new packages**: Update Gemfile (backend) or package.json (frontend)
 
-## 📝 Next Steps
+## Next Steps
 
 - [Development Guide](./development.md) - Detailed development setup
 - [API Reference](./api-reference.md) - Available endpoints

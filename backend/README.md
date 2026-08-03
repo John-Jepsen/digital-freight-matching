@@ -2,7 +2,7 @@
 
 Ruby on Rails 8.0.2 API backend for the Digital Freight Matching Platform.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -15,7 +15,7 @@ rails db:create db:migrate db:seed
 rails server -p 3001
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 ```bash
@@ -32,7 +32,7 @@ JWT_SECRET_KEY=your_secure_jwt_secret
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 backend/
@@ -48,7 +48,7 @@ backend/
 └── Gemfile                   # Ruby dependencies
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -61,7 +61,7 @@ bundle exec rspec spec/models/load_spec.rb
 COVERAGE=true bundle exec rspec
 ```
 
-## 🔍 Key Components
+## Key Components
 
 ### Core Models
 - **User**: Authentication and profiles
@@ -79,7 +79,7 @@ COVERAGE=true bundle exec rspec
 - **CarriersController**: Carrier operations
 - **TrackingController**: Real-time shipment tracking
 
-## 📊 Database
+## Database
 
 **PostgreSQL 16** with ActiveRecord ORM
 - Row-Level Security (RLS) for data protection
@@ -87,21 +87,21 @@ COVERAGE=true bundle exec rspec
 - Full-text search capabilities
 - Geographic data support
 
-## 🔐 Security
+## Security
 
 - **JWT Authentication**: Stateless token-based auth
 - **Role-Based Access**: Shipper/Carrier/Admin roles
 - **Input Validation**: Comprehensive model validations
 - **SQL Injection Protection**: ActiveRecord ORM
 
-## 📈 Performance
+## Performance
 
 - **Redis Caching**: Route and session caching
 - **Database Indexing**: Optimized for search queries
 - **Background Jobs**: Async processing with Sidekiq
 - **Query Optimization**: Includes/joins for N+1 prevention
 
-## 🚀 Development
+## Development
 
 ### Rails Console
 ```bash
@@ -137,7 +137,7 @@ rails routes
 rails routes | grep api
 ```
 
-## 📝 Documentation
+## Documentation
 
 For complete documentation, see the main [`docs/`](../docs/) folder:
 - [API Reference](../docs/api-reference.md) - Complete endpoint documentation

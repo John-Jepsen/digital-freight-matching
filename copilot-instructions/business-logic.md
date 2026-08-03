@@ -1,6 +1,6 @@
 # Business Logic & Domain Models
 
-## 🏢 Core Business Entities
+## Core Business Entities
 
 ### User Management System
 
@@ -448,7 +448,7 @@ class Shipment < ApplicationRecord
 end
 ```
 
-## 💰 Financial & Pricing Models
+## Financial & Pricing Models
 
 ### Dynamic Pricing Algorithm
 ```ruby
@@ -539,7 +539,7 @@ class PricingCalculationService
 end
 ```
 
-## 📊 Performance Metrics & Analytics
+## Performance Metrics & Analytics
 
 ### Carrier Performance Scoring
 ```ruby

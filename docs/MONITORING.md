@@ -2,7 +2,7 @@
 
 This document describes the comprehensive monitoring and alerting system implemented for the Digital Freight Matching platform.
 
-## 🎯 Overview
+## Overview
 
 The monitoring system provides:
 - **Real-time Application Performance Monitoring (APM)**
@@ -11,7 +11,7 @@ The monitoring system provides:
 - **Mean Time to Resolution (MTTR) < 15 minutes**
 - **99.9% System Uptime Monitoring**
 
-## 🏗️ Architecture
+## Architecture
 
 ### Core Components
 
@@ -30,7 +30,7 @@ The monitoring system provides:
 - **Carrier Performance**: Utilization rates, delivery times
 - **SLA Compliance**: Response times, uptime, error rates
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Start Monitoring Stack
 
@@ -54,7 +54,7 @@ docker compose -f docker-compose.monitoring.yml up -d prometheus grafana alertma
 
 Application metrics are available at: http://localhost:3000/metrics
 
-## 📊 Key Metrics & Alerts
+## Key Metrics & Alerts
 
 ### Application Performance
 - API response times (P95, P99)
@@ -74,7 +74,7 @@ Application metrics are available at: http://localhost:3000/metrics
 - **Error Rate SLA**: < 1% error rate
 - **Matching SLA**: > 85% success rate
 
-## 🔔 Alert Escalation
+## Alert Escalation
 
 ### Critical Business Alerts (Immediate)
 - Revenue drops > 20%
@@ -93,7 +93,7 @@ Application metrics are available at: http://localhost:3000/metrics
 - Minor service issues
 - **Channels**: Email
 
-## 🛠️ Configuration Files
+## Configuration Files
 
 ### Core Configuration
 - `backend/config/initializers/monitoring.rb` - Metrics definitions
@@ -105,7 +105,7 @@ Application metrics are available at: http://localhost:3000/metrics
 - `monitoring/alertmanager/alertmanager.yml` - Alert routing
 - `monitoring/grafana/provisioning/` - Dashboard provisioning
 
-## 📈 Business Metrics Collection
+## Business Metrics Collection
 
 The system automatically collects business metrics every 5 minutes via `BusinessMetricsCollectionJob`:
 
@@ -118,7 +118,7 @@ The system automatically collects business metrics every 5 minutes via `Business
 - API performance metrics
 ```
 
-## 🔧 Development
+## Development
 
 ### Adding New Metrics
 
@@ -149,7 +149,7 @@ end
 2. Configure notification channels in `monitoring/alertmanager/alertmanager.yml`
 3. Restart Prometheus and Alertmanager
 
-## 🧪 Testing
+## Testing
 
 ### Validate Configuration
 ```bash
@@ -172,7 +172,7 @@ curl http://localhost:3000/metrics
 curl http://localhost:3000/api/v1/analytics/business_metrics
 ```
 
-## 🔐 Environment Variables
+## Environment Variables
 
 Set these in `.env` file:
 
@@ -188,22 +188,22 @@ SECURITY_TEAM_EMAIL=security@yourcompany.com
 SLACK_WEBHOOK_URL=your_slack_webhook_url
 ```
 
-## 🎯 Success Metrics
+## Success Metrics
 
-- ✅ **MTTR < 15 minutes**: Automated alerting enables rapid response
-- ✅ **99.9% Uptime**: Comprehensive monitoring ensures high availability
-- ✅ **Real-time Business Insights**: Live dashboards for all stakeholders
-- ✅ **Proactive Issue Detection**: Anomaly detection prevents outages
-- ✅ **Comprehensive Coverage**: Application, business, and infrastructure metrics
+- **MTTR < 15 minutes**: Automated alerting enables rapid response
+- **99.9% Uptime**: Comprehensive monitoring ensures high availability
+- **Real-time Business Insights**: Live dashboards for all stakeholders
+- **Proactive Issue Detection**: Anomaly detection prevents outages
+- **Comprehensive Coverage**: Application, business, and infrastructure metrics
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [Yabeda Ruby Gem](https://github.com/yabeda-rb/yabeda)
 - [Alert Best Practices](https://prometheus.io/docs/practices/alerting/)
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 

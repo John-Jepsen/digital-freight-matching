@@ -2,14 +2,14 @@
 
 Complete REST API documentation for the Digital Freight Matching Platform.
 
-## 🌐 Base Configuration
+## Base Configuration
 
 **Base URL**: `http://localhost:3001`  
 **API Version**: v1  
 **Content-Type**: `application/json`  
 **Authentication**: JWT Bearer tokens  
 
-## 🏥 Health Check Endpoints
+## Health Check Endpoints
 
 ### System Health Check
 ```http
@@ -48,7 +48,7 @@ Comprehensive system status including database and cache connectivity.
 }
 ```
 
-## 🔐 Authentication
+## Authentication
 
 ### User Registration
 ```http
@@ -122,7 +122,7 @@ DELETE /api/v1/users/logout
 }
 ```
 
-## 👤 User Management
+## User Management
 
 ### Get Current User
 ```http
@@ -165,7 +165,7 @@ PUT /api/v1/users/profile
 }
 ```
 
-## 📦 Load Management
+## Load Management
 
 ### Create Load
 ```http
@@ -274,7 +274,7 @@ POST /api/v1/loads/:id/book
 }
 ```
 
-## 🚛 Carrier Operations
+## Carrier Operations
 
 ### Update Carrier Location
 ```http
@@ -336,7 +336,7 @@ POST /api/v1/carriers/accept_load/:load_id
 }
 ```
 
-## 🔍 Matching System
+## Matching System
 
 ### Find Carriers for Load
 ```http
@@ -395,7 +395,7 @@ GET /api/v1/matching/recommendations
 }
 ```
 
-## 🗺️ Route Operations
+## Route Operations
 
 ### Calculate Route
 ```http
@@ -440,7 +440,7 @@ POST /api/v1/routes/optimize
 }
 ```
 
-## 📍 Tracking System
+## Tracking System
 
 ### Update Shipment Location
 ```http
@@ -491,7 +491,7 @@ GET /api/v1/tracking/:shipment_id
 }
 ```
 
-## 📊 Analytics
+## Analytics
 
 ### Get Dashboard Data
 ```http
@@ -520,7 +520,7 @@ GET /api/v1/analytics/dashboard
 }
 ```
 
-## ❌ Error Responses
+## Error Responses
 
 ### Standard Error Format
 ```json
@@ -546,13 +546,13 @@ GET /api/v1/analytics/dashboard
 - `422` - Validation Error
 - `500` - Internal Server Error
 
-## 🔧 Rate Limiting
+## Rate Limiting
 
 - **Authentication endpoints**: 5 requests per minute
 - **Search endpoints**: 60 requests per minute
 - **General API**: 100 requests per minute
 
-## 🌐 CORS Configuration
+## CORS Configuration
 
 Configured for development origins:
 - `http://localhost:3000` (Web App)

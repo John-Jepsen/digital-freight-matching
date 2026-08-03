@@ -1,6 +1,6 @@
 # Security Implementation & Best Practices
 
-## 🔐 Security Architecture Overview
+## Security Architecture Overview
 
 The Digital Freight Matching Platform implements comprehensive security measures across authentication, authorization, data protection, and operational security to protect sensitive freight and business data.
 
@@ -10,7 +10,7 @@ The Digital Freight Matching Platform implements comprehensive security measures
 3. **Network Security**: HTTPS, CORS, rate limiting
 4. **Infrastructure Security**: Environment isolation, secrets management
 
-## 🎫 Authentication System
+## Authentication System
 
 ### JWT Token Management
 ```ruby
@@ -162,7 +162,7 @@ class User < ApplicationRecord
 end
 ```
 
-## 🛡️ Authorization with Pundit
+## Authorization with Pundit
 
 ### Policy-Based Access Control
 ```ruby
@@ -403,7 +403,7 @@ class Api::V1::LoadsController < ApplicationController
 end
 ```
 
-## 🔒 Data Protection
+## Data Protection
 
 ### Row-Level Security (RLS) Implementation
 ```sql
@@ -509,7 +509,7 @@ class Driver < ApplicationRecord
 end
 ```
 
-## 🚨 Security Monitoring & Audit Logging
+## Security Monitoring & Audit Logging
 
 ### Comprehensive Audit System
 ```ruby
@@ -684,7 +684,7 @@ class RateLimitMiddleware
 end
 ```
 
-## 🔐 Input Validation & Sanitization
+## Input Validation & Sanitization
 
 ### Strong Parameter Validation
 ```ruby
@@ -776,7 +776,7 @@ class LoadSearchService
 end
 ```
 
-## 🌐 Network Security
+## Network Security
 
 ### CORS Configuration
 ```ruby

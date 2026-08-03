@@ -2,7 +2,7 @@
 
 External services, environment setup, and configuration management for the Digital Freight Matching Platform.
 
-## 🌐 External Service Integration
+## External Service Integration
 
 ### Google Maps API Setup
 
@@ -74,7 +74,7 @@ def calculate_distance(origin, destination)
 end
 ```
 
-## 🔐 Environment Configuration
+## Environment Configuration
 
 ### Environment Variables Reference
 
@@ -188,7 +188,7 @@ ADMIN_URL=https://admin.yourcompany.com
 API_URL=https://api.yourcompany.com
 ```
 
-## 🐳 Docker Configuration
+## Docker Configuration
 
 ### Development Docker Setup
 
@@ -293,7 +293,7 @@ services:
     restart: unless-stopped
 ```
 
-## 🔒 Security Configuration
+## Security Configuration
 
 ### SSL/TLS Setup (Production)
 
@@ -348,7 +348,7 @@ ufw default deny incoming
 ufw default allow outgoing
 ```
 
-## 📊 Monitoring Configuration
+## Monitoring Configuration
 
 ### Application Monitoring
 
@@ -413,7 +413,7 @@ gzip "$BACKUP_DIR/$FILENAME"
 find $BACKUP_DIR -name "freight_matching_*.sql.gz" -mtime +7 -delete
 ```
 
-## 🔧 Configuration Management Tools
+## Configuration Management Tools
 
 ### Using dotenv (Development)
 
@@ -453,7 +453,7 @@ Rails.application.credentials.database_password
 Rails.application.credentials.production.secret_key_base
 ```
 
-## 🔄 Configuration Validation
+## Configuration Validation
 
 ### Startup Checks
 
@@ -486,17 +486,17 @@ echo "Testing configuration..."
 
 # Test database connection
 docker compose exec backend rails runner "ActiveRecord::Base.connection"
-echo "✅ Database connection: OK"
+echo "Database connection: OK"
 
 # Test Redis connection  
 docker compose exec backend rails runner "Rails.cache.write('test', 'value')"
-echo "✅ Redis connection: OK"
+echo "Redis connection: OK"
 
 # Test API key (if configured)
 if [ ! -z "$GOOGLE_MAPS_API_KEY" ]; then
-  echo "✅ Google Maps API key: Configured"
+  echo "Google Maps API key: Configured"
 else
-  echo "⚠️  Google Maps API key: Not configured (using fallback calculations)"
+  echo "Google Maps API key: Not configured (using fallback calculations)"
 fi
 
 echo "Configuration test complete!"

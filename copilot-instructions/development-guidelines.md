@@ -1,6 +1,6 @@
 # Development Guidelines & Standards
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend (Ruby on Rails 8.0.2)
 - **Framework**: Rails API-only mode with Ruby 3.2+
@@ -23,7 +23,7 @@
 - **Development**: Hot reload for both Rails and React
 - **Database**: PostgreSQL with Row-Level Security (RLS)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 backend/
@@ -44,7 +44,7 @@ frontend/
     └── src/
 ```
 
-## 🎯 Coding Standards
+## Coding Standards
 
 ### Rails API Development
 
@@ -227,7 +227,7 @@ const useLoads = (filters: LoadFilters) => {
 };
 ```
 
-## 🗄️ Database Design Principles
+## Database Design Principles
 
 ### Model Relationships
 ```ruby
@@ -267,7 +267,7 @@ CREATE INDEX idx_matches_load_carrier ON matches(load_id, carrier_id);
 CREATE INDEX idx_tracking_events_shipment ON tracking_events(shipment_id, occurred_at DESC);
 ```
 
-## 🔐 Security Guidelines
+## Security Guidelines
 
 ### Authentication & Authorization
 ```ruby
@@ -332,7 +332,7 @@ class Load < ApplicationRecord
 end
 ```
 
-## 🧪 Testing Standards
+## Testing Standards
 
 ### RSpec for Backend
 ```ruby
@@ -411,7 +411,7 @@ describe('LoadCard', () => {
 });
 ```
 
-## 🚀 Performance Guidelines
+## Performance Guidelines
 
 ### Database Optimization
 - Use database indexes on frequently queried columns
@@ -427,7 +427,7 @@ describe('LoadCard', () => {
 - Implement virtual scrolling for large lists
 - Optimize bundle size with code splitting
 
-## 🔧 Development Commands Reference
+## Development Commands Reference
 
 ### Backend Development
 ```bash
@@ -477,7 +477,7 @@ docker compose up
 docker compose logs -f backend
 ```
 
-## 📋 Code Review Checklist
+## Code Review Checklist
 
 ### Backend PR Review
 - [ ] Models have proper validations and associations
